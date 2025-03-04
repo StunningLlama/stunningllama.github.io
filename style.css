@@ -118,9 +118,9 @@
 
         #video-container {
             position: relative;
-            width: 80%;
+            width: 40%;
             margin: auto;
-            padding-bottom: 56.25%;
+            padding-bottom: 30%;
             height: 0;
             overflow: hidden;
             margin-bottom: 20px;
