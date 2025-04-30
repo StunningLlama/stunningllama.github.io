@@ -1,0 +1,1 @@
+emcc -O3 -s WASM=1 -s EXPORTED_FUNCTIONS='["_iterateSimulation", "_malloc", "_multigridSolve"]' -sEXPORTED_RUNTIME_METHODS=HEAPF64 -sALLOW_MEMORY_GROWTH -sASSERTIONS -o wasm_code.js wasm_code.cpp
