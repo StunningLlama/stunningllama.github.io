@@ -81,7 +81,7 @@ void iterateSimulation(
 
 			rho_free[ij] = rho_abs[ij] + rho_n[ij] + rho_p[ij] + rho_back[ij];
 
-			double E_avg = sqrtf(0.5 * (Ex[ij] * Ex[ij] + Ex[ijL] * Ex[ijL] + Ey[ij] * Ey[ij] + Ey[ijB] * Ey[ijB]));
+			double E_avg = std::sqrt(0.5 * (Ex[ij] * Ex[ij] + Ex[ijL] * Ex[ijL] + Ey[ij] * Ey[ij] + Ey[ijB] * Ey[ijB]));
 			mobility_factor[ij] = std::min(1.0, E_sat / (E_avg > 0 ? E_avg : 1));
 		}
 	}

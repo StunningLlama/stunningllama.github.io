@@ -639,6 +639,13 @@ class Electrodynamics {
             this.ptr_rho_free,
             this.ds,
             this.width);
+
+        if (computePhi)
+            this.copyWasmHeapTo2DArray(this.ptr_phi, this.nx, this.ny, this.phi);
+        if (computeE) {
+            this.copyWasmHeapTo2DArray(this.ptr_Ex, this.nx, this.ny, this.Ex);
+            this.copyWasmHeapTo2DArray(this.ptr_Ey, this.nx, this.ny, this.Ey);
+        }
     }
 
     // Existing methods (unchanged, included for completeness)
@@ -817,10 +824,6 @@ class Electrodynamics {
         this.copyWasmHeapTo2DArray(this.ptr_Jy_n, this.nx, this.ny, this.Jy_n);
         this.copyWasmHeapTo2DArray(this.ptr_Jy_p, this.nx, this.ny, this.Jy_p);
         this.copyWasmHeapTo2DArray(this.ptr_Jy_abs, this.nx, this.ny, this.Jy_abs);
-    }
-
-    readPotentialFromWASM() {
-        this.copyWasmHeapTo2DArray(this.ptr_phi, this.nx, this.ny, this.phi);
     }
 
     allocateHeapArray(nx, ny, type = Float64Array) {
@@ -1187,7 +1190,7 @@ class Electrodynamics {
         for (let i = i1 - max_distance; i <= i1 + max_distance; i++) {
             for (let j = j1 - max_distance; j <= j1 + max_distance; j++) {
                 if (i >= 0 && j >= 0 && i < this.nx && j < this.ny) {
-                    this.distance[i][j] = Number.MAX_SAFE_INTEGER;
+                    this.distance[i][j] = max_distance+1;
                     this.visited[i][j] = false;
                 }
             }
@@ -1195,7 +1198,7 @@ class Electrodynamics {
         this.distance[i1][j1] = 0;
 
         while (true) {
-            let smallest_length = Number.MAX_SAFE_INTEGER;
+            let smallest_length = max_distance+1;
             let smallest_i = 0;
             let smallest_j = 0;
             for (let i = i1 - max_distance; i <= i1 + max_distance; i++) {
@@ -1210,7 +1213,7 @@ class Electrodynamics {
                 }
             }
 
-            if (smallest_length === Number.MAX_SAFE_INTEGER) break;
+            if (smallest_length === max_distance+1) break;
 
             for (let di = -1; di <= 1; di++) {
                 for (let dj = -1; dj <= 1; dj++) {
@@ -1932,8 +1935,6 @@ class Electrodynamics {
             this.t7.start();
             this.multigridSolve(false, true);
             this.t7.stop();
-
-            this.readPotentialFromWASM();
         }
 
         this.t8.start();
