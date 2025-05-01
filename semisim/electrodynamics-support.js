@@ -1,6 +1,6 @@
 const MaterialType = Object.freeze({
     EMF: { name: "Voltage source (Adjustable)", color_r: 230, color_g: 216, color_b: 46, color_grayscale: 230, toString: function() { return `Material: ${this.name}`; } },
-    SWITCH: { name: "Switch", color_r: 194, color_g: 194, color_b: 194, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
+    SWITCH: { name: "Switch (Toggleable)", color_r: 194, color_g: 194, color_b: 194, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     METAL: { name: "Metal", color_r: 153, color_g: 153, color_b: 153, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     METAL_HIGH_C: { name: "Conductive metal", color_r: 191, color_g: 191, color_b: 191, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     METAL_LOW_C: { name: "Resistive metal", color_r: 94, color_g: 94, color_b: 94, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
@@ -15,6 +15,8 @@ const MaterialType = Object.freeze({
     SEMI_LIGHT_N_TYPE: { name: "Lightly doped N-type semiconductor", color_r: 137, color_g: 188, color_b: 204, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     DIELECTRIC: { name: "Dielectric", color_r: 81, color_g: 171, color_b: 51, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     FERROMAGNET: { name: "Ferromagnet", color_r: 116, color_g: 50, color_b: 117, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
+    POS_CHARGE: { name: "Positive static charge", color_r: 116, color_g: 50, color_b: 50, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
+    NEG_CHARGE: { name: "Negative static charge", color_r: 50, color_g: 50, color_b: 117, color_grayscale: 120, toString: function() { return `Material: ${this.name}`; } },
     DECO: { name: "Decoration", color_r: 255, color_g: 255, color_b: 255, color_grayscale: 255, toString: function() { return `Material: ${this.name}`; } },
     ABSORBER: { name: "Absorber", color_r: 50, color_g: 50, color_b: 50, color_grayscale: Math.round(0.7 * Math.max(50, 50)), toString: function() { return `Material: ${this.name}`; } },
     VACUUM: { name: "Vacuum", color_r: 20, color_g: 20, color_b: 20, color_grayscale: Math.round(0.7 * Math.max(20, 20)), toString: function() { return `Material: ${this.name}`; } },
@@ -46,6 +48,8 @@ MaterialType_values = [
     MaterialType.SEMI_LIGHT_N_TYPE,
     MaterialType.DIELECTRIC,
     MaterialType.FERROMAGNET,
+    MaterialType.POS_CHARGE,
+    MaterialType.NEG_CHARGE,
     MaterialType.DECO,
     MaterialType.ABSORBER,
     MaterialType.VACUUM

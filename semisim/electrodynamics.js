@@ -119,6 +119,7 @@ class Electrodynamics {
         this.p_heavy_doping_concentration = 2.5e20;
         this.dielectric_eps_r = 5.0;
         this.ferromagnet_mu_r = 5.0;
+        this.staticcharge_density = 1.0;
         this.E_sat = 5e5;
         this.junction_size = 3;
         this.voltageprobes = [];
@@ -303,7 +304,7 @@ class Electrodynamics {
         this.gui_editdesc = document.getElementById('gui_editdesc');
         this.gui_material = document.getElementById('gui_material');
         this.gui_material.innerHTML = MaterialType_values
-            .filter(m => m !== MaterialType.ABSORBER && m !== MaterialType.SWITCH)
+            .filter(m => m !== MaterialType.ABSORBER)
             .map(m => `<option value="${m.name}">${m.name}</option>`).join('');
         this.gui_material.selectedIndex = 0;
         this.gui_brush = document.getElementById('gui_brush');
@@ -316,6 +317,7 @@ class Electrodynamics {
         this.gui_brush_1.selectedIndex = 1;
         this.gui_brushsize = document.getElementById('gui_brushsize');
         this.gui_brush_highlight = document.getElementById('gui_brush_highlight');
+        this.gui_brush_highlight_label = document.getElementById('gui_brush_highlight_label');
         this.gui_view = document.getElementById('gui_view');
         this.gui_view.innerHTML = Object.values(ScalarView)
             .filter(v => v !== ScalarView.DEBUG)
@@ -612,7 +614,7 @@ class Electrodynamics {
 
         this.t6.stop();
 
-        if (this.stepnumber % 200 === 0) {
+        if (this.stepnumber % 100 === 0) {
             this.t4.start();
             this.multigridSolve(true, false);
             this.t4.stop();
@@ -1072,13 +1074,13 @@ class Electrodynamics {
         for (let i = 0; i < this.nx; i++) {
             for (let j = 0; j < this.ny; j++) {
                 this.rho_back[i][j] = this.materials[i][j].rho_back;
-                this.conducting[i][j] = this.materials[i][j].conducting;
+                this.conducting[i][j] = this.materials[i][j].conducting*this.materials[i][j].activated;
             }
         }
 
         for (let i = 0; i < this.nx - 1; i++) {
             for (let j = 1; j < this.ny - 1; j++) {
-                this.conducting_x[i][j] = Math.min(this.materials[i + 1][j].conducting, this.materials[i][j].conducting);
+                this.conducting_x[i][j] = Math.min(this.materials[i + 1][j].conducting*this.materials[i + 1][j].activated, this.materials[i][j].conducting*this.materials[i][j].activated);
                 this.emfx[i][j] = 0.5 * (
                     this.materials[i + 1][j].emf * Math.cos(this.materials[i + 1][j].emf_direction) * this.materials[i + 1][j].activated +
                     this.materials[i][j].emf * Math.cos(this.materials[i][j].emf_direction) * this.materials[i][j].activated
@@ -1090,7 +1092,7 @@ class Electrodynamics {
 
         for (let i = 1; i < this.nx - 1; i++) {
             for (let j = 0; j < this.ny - 1; j++) {
-                this.conducting_y[i][j] = Math.min(this.materials[i][j + 1].conducting, this.materials[i][j].conducting);
+                this.conducting_y[i][j] = Math.min(this.materials[i][j + 1].conducting*this.materials[i][j + 1].activated, this.materials[i][j].conducting*this.materials[i][j].activated);
                 this.emfy[i][j] = 0.5 * (
                     this.materials[i][j + 1].emf * Math.sin(this.materials[i][j + 1].emf_direction) * this.materials[i][j + 1].activated +
                     this.materials[i][j].emf * Math.sin(this.materials[i][j].emf_direction) * this.materials[i][j].activated
@@ -1104,7 +1106,7 @@ class Electrodynamics {
 
         for (let i = 0; i < this.nx; i++) {
             for (let j = 0; j < this.ny; j++) {
-                if (this.K[i][j] > 0) {
+                if (this.K[i][j] > 0 || this.materials[i][j].type == MaterialType.SWITCH) {
                     if (this.rho_n[i][j] === 0 && this.rho_p[i][j] === 0) {
                         this.rho_n[i][j] = this.calcEquilibriumElectronCharge(this.rho_back[i][j], this.K[i][j]);
                         this.rho_p[i][j] = this.calcEquilibriumHoleCharge(this.rho_back[i][j], this.K[i][j]);
@@ -1340,6 +1342,10 @@ class Electrodynamics {
             this.materials[i][j].eps_r = this.dielectric_eps_r;
         } else if (material === MaterialType.FERROMAGNET) {
             this.materials[i][j].mu_r = this.ferromagnet_mu_r;
+        } else if (material === MaterialType.POS_CHARGE) {
+            this.materials[i][j].rho_back = this.staticcharge_density;
+        } else if (material === MaterialType.NEG_CHARGE) {
+            this.materials[i][j].rho_back = -this.staticcharge_density;
         }
 
         if (MaterialType.isConducting(material)) {
@@ -1459,6 +1465,27 @@ class Electrodynamics {
             this.gui_parameter2_text.style.display = 'none';
             this.gui_parameter2_text.textContent = '';
         }
+
+        if (Brush.isMaterialModifyingBrush(brush) && brush !== Brush.FILL) {
+			this.gui_brush_1.style.display = 'inline';
+			this.gui_brush_highlight.style.display = 'inline';
+			this.gui_brush_highlight_label.style.display = 'inline';
+			this.gui_brushsize.style.display = 'inline';
+			this.gui_lblBrushSize.style.display = 'inline';
+		} else {
+			this.gui_brush_1.style.display = 'none';
+			this.gui_brush_highlight.style.display = 'none';
+			this.gui_brush_highlight_label.style.display = 'none';
+			this.gui_brushsize.style.display = 'none';
+			this.gui_lblBrushSize.style.display = 'none';
+		}
+		
+
+		if (Brush.isMaterialModifyingBrush(brush) && brush !== Brush.ERASE) {
+			this.gui_material.style.display = 'inline';
+		} else {
+			this.gui_material.style.display = 'none';
+		}
 
         if (this.brush_changed) {
             if (!(brush === Brush.SELECT || brush === Brush.FLOODSELECT)) {
@@ -1582,7 +1609,7 @@ class Electrodynamics {
                     this.gui_parameter2_text.textContent = '';
                 }
 
-                if (this.mousebutton === 2) {
+                if (this.mousebutton === 2 || brush === Brush.ERASE) {
                     mat = MaterialType.VACUUM;
                 }
 
@@ -1626,38 +1653,35 @@ class Electrodynamics {
                 break;
 
             case Brush.INTERACT:
-                if (this.materials[this.mx_index][this.my_index].type === MaterialType.EMF) {
+                if (this.materials[this.mx_index][this.my_index].type === MaterialType.EMF || this.materials[this.mx_index][this.my_index].type === MaterialType.SWITCH) {
                     this.canvas.style.cursor = this.HAND_CURSOR;
                 } else {
                     this.canvas.style.cursor = this.DEFAULT_CURSOR;
                 }
 
                 if (pressing) {
-                    if (this.selected_EMF[this.mx_index][this.my_index]) {
-                        for (let i = 0; i < this.nx; i++) {
-                            for (let j = 0; j < this.ny; j++) {
-                                this.selected_EMF[i][j] = false;
-                            }
-                        }
-                        this.EMF_selected = false;
-                    } else {
-                        for (let i = 0; i < this.nx; i++) {
-                            for (let j = 0; j < this.ny; j++) {
-                                this.selected_EMF[i][j] = false;
-                            }
-                        }
-                        if (this.materials[this.mx_index][this.my_index].type === MaterialType.EMF) {
-                            this.floodFillSelectEMF(this.mx_index, this.my_index, true);
-                            this.EMF_selected = true;
-                            const setting = Math.round(50 * this.materials[this.mx_index][this.my_index].emf / this.max_EMF);
-                            this.gui_parameter3.value = setting;
-                            this.prev_EMF_setting = setting;
-                        } else {
-                            this.EMF_selected = false;
+                    const turn_on_EMF = !this.selected_EMF[this.mx_index][this.my_index];
+
+                    for (let i = 0; i < this.nx; i++) {
+                        for (let j = 0; j < this.ny; j++) {
+                            this.selected_EMF[i][j] = false;
                         }
                     }
+                    this.EMF_selected = false;
+
+                    if (this.materials[this.mx_index][this.my_index].type === MaterialType.EMF && turn_on_EMF) {
+                        this.floodFillSelectEMF(this.mx_index, this.my_index, true);
+                        this.EMF_selected = true;
+                        const setting = Math.round(50 * this.materials[this.mx_index][this.my_index].emf / this.max_EMF);
+                        this.gui_parameter3.value = setting;
+                        this.prev_EMF_setting = setting;
+                    }
+
+                    if (this.materials[this.mx_index][this.my_index].type == MaterialType.SWITCH) {
+                        this.floodFillToggleSwitch(this.mx_index, this.my_index, 1 - this.materials[this.mx_index][this.my_index].activated);
+                        update = true;
+                    }
                 }
-                break;
 
             case Brush.FLOODSELECT:
             case Brush.SELECT:
@@ -2304,6 +2328,24 @@ class Electrodynamics {
         }
     }
 
+    floodFillToggleSwitch(i, j, active) {
+        const queue = [];
+        queue.push(new FloodFillCoordinate(i, j));
+
+        while (queue.length > 0) {
+            const coord = queue.shift();
+            if (coord.i >= 0 && coord.i < this.nx && coord.j >= 0 && coord.j < this.ny &&
+                this.materials[coord.i][coord.j].type === MaterialType.SWITCH &&
+                this.materials[coord.i][coord.j].activated !== active) {
+                this.materials[coord.i][coord.j].activated = active;
+                queue.push(new FloodFillCoordinate(coord.i - 1, coord.j));
+                queue.push(new FloodFillCoordinate(coord.i + 1, coord.j));
+                queue.push(new FloodFillCoordinate(coord.i, coord.j - 1));
+                queue.push(new FloodFillCoordinate(coord.i, coord.j + 1));
+            }
+        }
+    }
+
     drawPixelRectangle(x, y, w, h) {
         for (let i = x; i < x + w; i++) {
             for (let j = y; j < y + h; j++) {
@@ -2672,6 +2714,11 @@ class Electrodynamics {
                     const delta_g = MaterialType.EMF.color_g + offset;
                     const delta_b = MaterialType.EMF.color_b + offset;
                     this.setColor(delta_r, delta_g, delta_b);
+                    this.setPixel(i, j);
+                } else if (!this.materials[i][j].activated) {
+                    this.setalphaBG(0.25);
+                    this.setalphaFG(0.75);
+                    this.setColor(0, 0, 0);
                     this.setPixel(i, j);
                 }
 
@@ -3724,8 +3771,6 @@ class Electrodynamics {
             this.updateMiscFields = true;
         } else if (source === this.gui_brush) {
             this.brush_changed = true;
-        } else if (source === this.gui_material) {
-            this.gui_brush.value = Brush.DRAW.name;
         }
     }
 
