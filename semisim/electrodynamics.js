@@ -125,12 +125,12 @@ class Electrodynamics {
         this.voltageprobes = [];
         this.currentprobes = [];
         this.ground = null;
-        this.default_width = 2.5e-5;
+        this.default_width = 2.56e-5;
         this.width = 0;
         this.ds = 0;
         this.dt = 0;
         this.depth = 1e-3;
-        this.default_resolution = 250;
+        this.default_resolution = 256; //Must be a power of 2
         this.nx = 0;
         this.ny = 0;
         this.absorber_width = 0;
@@ -625,7 +625,7 @@ class Electrodynamics {
     }
 
     multigridSolve(computeE, computePhi) {
-        Module._multigridSolve(this.nx, this.ny, computeE, computePhi,
+        Module._multigridSolve(this.nx, this.ny, this.log2_resolution, computeE, computePhi,
             this.ptr_MG_phi1,
             this.ptr_MG_phi2,
             this.ptr_MG_rho,
@@ -757,7 +757,7 @@ class Electrodynamics {
 
         this.ptr_MG_phi1 = this.allocateHeapArray(this.nx, this.ny);
         this.ptr_MG_phi2 = this.allocateHeapArray(this.nx, this.ny);
-        this.ptr_MG_rho = this.allocateHeapArray(this.nx, this.ny);
+        this.ptr_MG_rho = this.allocate3DHeapArray(this.nx, this.ny);
         this.ptr_MG_rho0 = this.allocateHeapArray(this.nx, this.ny);
         this.ptr_MG_epsx = this.allocate3DHeapArray(this.nx, this.ny);
         this.ptr_MG_epsy = this.allocate3DHeapArray(this.nx, this.ny);
@@ -802,7 +802,7 @@ class Electrodynamics {
 
         this.copy2DArrayToWasmHeap(this.MG_phi1, this.nx, this.ny, this.ptr_MG_phi1);
         this.copy2DArrayToWasmHeap(this.MG_phi2, this.nx, this.ny, this.ptr_MG_phi2);
-        this.copy2DArrayToWasmHeap(this.MG_rho, this.nx, this.ny, this.ptr_MG_rho);
+        this.copy3DArrayToWasmHeap(this.MG_rho, this.nx, this.ny, this.ptr_MG_rho);
         this.copy2DArrayToWasmHeap(this.MG_rho0, this.nx, this.ny, this.ptr_MG_rho0);
         this.copy3DArrayToWasmHeap(this.MG_epsx, this.nx, this.ny, this.ptr_MG_epsx);
         this.copy3DArrayToWasmHeap(this.MG_epsy, this.nx, this.ny, this.ptr_MG_epsy);
@@ -836,7 +836,7 @@ class Electrodynamics {
 
     allocate3DHeapArray(nx, ny, type = Float64Array) {
         const bytesPerElement = type.BYTES_PER_ELEMENT;
-        const ptr = Module._malloc(11 * nx * ny * bytesPerElement);
+        const ptr = Module._malloc((this.log2_resolution+1) * nx * ny * bytesPerElement);
         return ptr;
     }
 
@@ -880,8 +880,8 @@ class Electrodynamics {
     }
 
     copy3DArrayToWasmHeap(js3DArray, nx, ny, ptr, type = Float64Array) {
-        const flatArray = new type(11 * nx * ny);
-        for (let k = 0; k < 11; k++) {
+        const flatArray = new type((this.log2_resolution+1) * nx * ny);
+        for (let k = 0; k < (this.log2_resolution+1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
                     flatArray[k * nx * ny + i * ny + j] = js3DArray[k][i][j];
@@ -911,9 +911,9 @@ class Electrodynamics {
                     (type === Uint8Array) ? Module.HEAPU8 :
                         (() => { throw new Error("Unsupported type"); })();
 
-        const flat = new type(heap.buffer, ptr, 11 * nx * ny);
+        const flat = new type(heap.buffer, ptr, (this.log2_resolution+1) * nx * ny);
 
-        for (let k = 0; k < 11; k++) {
+        for (let k = 0; k < (this.log2_resolution+1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
                     result[i][j] = flat[k * nx * ny + i * ny + j];
@@ -948,6 +948,8 @@ class Electrodynamics {
         this.nx = resolution;
         this.ny = resolution;
         this.width = this.nx * this.ds;
+        this.log2_resolution = Math.round(Math.log(resolution) / Math.log(2));
+        console.assert((1 << this.log2_resolution) === resolution, "resolution must be a power of 2");
         this.dt_maximum = 0.9 * this.ds / (Math.sqrt(2) * this.c);
         this.Hz_dissipation = 0.01 * this.ds * this.ds / this.dt_maximum;
 
@@ -1017,9 +1019,9 @@ class Electrodynamics {
         this.F = this.create2DArray(this.nx, this.ny);
         this.debug = this.create2DArray(this.nx, this.ny);
         this.MG_rho0 = this.create2DArray(this.nx, this.ny);
-        this.MG_rho = this.create2DArray(this.nx, this.ny);
-        this.MG_epsx = this.create3DArray(11, this.nx, this.ny);
-        this.MG_epsy = this.create3DArray(11, this.nx, this.ny);
+        this.MG_rho = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
+        this.MG_epsx = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
+        this.MG_epsy = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
         this.MG_eps_avg = this.create2DArray(this.nx, this.ny);
         this.MG_phi1 = this.create2DArray(this.nx, this.ny);
         this.MG_phi2 = this.create2DArray(this.nx, this.ny);
@@ -2186,16 +2188,9 @@ class Electrodynamics {
     }
 
     prescaleDielectric() {
-        const maxfineness = Math.floor(Math.log2(this.nx));
-        for (let fineness = 2; fineness <= maxfineness; fineness++) {
-            const nxcgint = (1 << fineness) - 1;
-            const nycgint = (1 << fineness) - 1;
-            const gridsize = this.width / (1 << fineness);
-            this.downscale(this.epsx, this.MG_epsx[fineness], this.nx - 2, this.ny - 1, nxcgint, nycgint + 1, this.ds / 2.0, 0, this.ds, gridsize / 2.0, 0, gridsize);
-            this.downscale(this.epsy, this.MG_epsy[fineness], this.nx - 1, this.ny - 2, nxcgint + 1, nycgint, 0, this.ds / 2.0, this.ds, 0, gridsize / 2.0, gridsize);
-        }
+        this.downscale_x_vector(this.epsx, this.MG_epsx, this.log2_resolution, this.nx, this.ny);
+        this.downscale_y_vector(this.epsy, this.MG_epsy, this.log2_resolution, this.nx, this.ny);
     }
-
 
     bilinearinterp(array, x, y) {
         let xfloor = Math.floor(x);
@@ -2232,40 +2227,56 @@ class Electrodynamics {
         return va * (1.0 - fy) + vb * fy;
     }
 
-    downscale(source, dest, sx, sy, dx, dy, soffsetx, soffsety, sspacing, doffsetx, doffsety, dspacing) {
-        for (let i = 0; i <= dx; i++) {
-            for (let j = 0; j < dy; j++) {
-                dest[i][j] = 0;
+    downscale_x_vector(source, dest, steps, nx, ny) {
+        // Copy initial data
+        for (let i = 0; i < nx - 1; i++) {
+            for (let j = 0; j < ny; j++) {
+                dest[steps][i][j] = source[i][j];
             }
         }
-        const scalefactor = (sspacing * sspacing) / (dspacing * dspacing);
-        for (let i = 0; i <= sx; i++) {
-            for (let j = 0; j <= sy; j++) {
-                const cx = (i * sspacing + soffsetx - doffsetx) / dspacing;
-                const cy = (j * sspacing + soffsety - doffsety) / dspacing;
-                let xfloor = Math.floor(cx);
-                let yfloor = Math.floor(cy);
-                let fx = cx - xfloor;
-                let fy = cy - yfloor;
-                if (xfloor < 0) {
-                    xfloor = 0;
-                    fx = 0.0;
-                } else if (xfloor >= dx) {
-                    xfloor = dx - 1;
-                    fx = 1.0;
+    
+        let nx_d = nx;
+        let ny_d = ny;
+    
+        for (let k = steps - 1; k >= 0; k--) {
+            nx_d = Math.floor(nx_d / 2);
+            ny_d = Math.floor(ny_d / 2);
+    
+            for (let i = 0; i < nx_d - 1; i++) {
+                for (let j = 0; j < ny_d; j++) {
+                    dest[k][i][j] = 0.125 * (
+                        dest[k + 1][2 * i][2 * j] + dest[k + 1][2 * i][2 * j + 1] +
+                        2 * dest[k + 1][2 * i + 1][2 * j] + 2 * dest[k + 1][2 * i + 1][2 * j + 1] +
+                        dest[k + 1][2 * i + 2][2 * j] + dest[k + 1][2 * i + 2][2 * j + 1]
+                    );
                 }
-                if (yfloor < 0) {
-                    yfloor = 0;
-                    fy = 0.0;
-                } else if (yfloor >= dy) {
-                    yfloor = dy - 1;
-                    fy = 1.0;
+            }
+        }
+    }
+    
+    downscale_y_vector(source, dest, steps, nx, ny) {
+        // Copy initial data
+        for (let i = 0; i < nx; i++) {
+            for (let j = 0; j < ny - 1; j++) {
+                dest[steps][i][j] = source[i][j];
+            }
+        }
+    
+        let nx_d = nx;
+        let ny_d = ny;
+    
+        for (let k = steps - 1; k >= 0; k--) {
+            nx_d = Math.floor(nx_d / 2);
+            ny_d = Math.floor(ny_d / 2);
+    
+            for (let i = 0; i < nx_d; i++) {
+                for (let j = 0; j < ny_d - 1; j++) {
+                    dest[k][i][j] = 0.125 * (
+                        dest[k + 1][2 * i][2 * j] + dest[k + 1][2 * i + 1][2 * j] +
+                        2 * dest[k + 1][2 * i][2 * j + 1] + 2 * dest[k + 1][2 * i + 1][2 * j + 1] +
+                        dest[k + 1][2 * i][2 * j + 2] + dest[k + 1][2 * i + 1][2 * j + 2]
+                    );
                 }
-                const srcval = source[i][j] * scalefactor;
-                dest[xfloor][yfloor] += srcval * (1 - fx) * (1 - fy);
-                dest[xfloor + 1][yfloor] += srcval * fx * (1 - fy);
-                dest[xfloor][yfloor + 1] += srcval * (1 - fx) * fy;
-                dest[xfloor + 1][yfloor + 1] += srcval * fx * fy;
             }
         }
     }

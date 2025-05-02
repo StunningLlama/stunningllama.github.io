@@ -160,356 +160,90 @@ void iterateSimulation(
 	}
 }
 
-//void multigridSolve(bool correctEfield, bool computePhi) {
-//	for (int i = 0; i < nx; i++) {
-//		for (int j = 0; j < ny; j++) {
-//			MG_phi1[i][j] = 0;
-//			MG_rho[i][j] = 0;
-//		}
-//	}
-//
-//	if (correctEfield)
-//	{
-//		for (int i = 1; i < nx-1; i++) {
-//			for (int j = 1; j < ny-1; j++) {
-//				MG_rho0[i][j] = ((Ex[i][j]*epsx[i][j]-Ex[i-1][j]*epsx[i-1][j] + Ey[i][j]*epsy[i][j]-Ey[i][j-1]*epsy[i][j-1])/ds) - rho_free[i][j];
-//			}
-//		}
-//	}
-//	if (computePhi) {
-//		for (int i = 1; i < nx-1; i++) {
-//			for (int j = 1; j < ny-1; j++) {
-//				MG_rho0[i][j] = (Ex[i][j]-Ex[i-1][j] + Ey[i][j]-Ey[i][j-1])/(ds) + (phi[i+1][j]+phi[i][j+1]+phi[i-1][j]+phi[i][j-1]-4*phi[i][j])/(ds*ds);
-//			}
-//		}
-//	}
-//
-//	int nxint = nx-2;
-//	int nyint = ny-2;
-//
-//	int[] stepsarray = {0, 0, 200, 200, 200, 200, 200, 50, 20, 20, 20};
-//
-//	int maxfineness = (int)std::floor(std::log(nx)/std::log(2));
-//	for (int fineness = 2; fineness <= maxfineness; fineness++) {
-//		int nxcgint = (1 << fineness) - 1;
-//		int nycgint = (1 << fineness) - 1;
-//		double gridsize = width/(1 << fineness);
-//
-//
-//		downscale(MG_rho0, MG_rho, nx-1, ny-1, nxcgint+1, nycgint+1, 0, 0, ds, 0, 0, gridsize);
-//
-//		int poissonsteps = stepsarray[fineness];
-//		double alpha = (gridsize*gridsize);
-//		double beta = 4;
-//
-//		JacobiIteration(poissonsteps, nxcgint, nycgint, alpha, beta, gridsize, fineness, debug, computePhi);
-//
-//		if (fineness < maxfineness) {
-//
-//			for (int i = 0; i < nxcgint+2; i++) {
-//				for (int j = 0; j < nycgint+2; j++) {
-//					MG_phi2[i][j] = MG_phi1[i][j];
-//				}
-//			}
-//
-//			nxcgint = (1 << (fineness+1)) - 1;
-//			nycgint = (1 << (fineness+1)) - 1;
-//			gridsize = width/(1 << (fineness+1));
-//
-//
-//			for (int i = 1; i < nxcgint+1; i++)
-//			{
-//				for (int j = 1; j < nycgint+1; j++) {
-//					MG_phi1[i][j] = bilinearinterp(MG_phi2, i/2.0, j/2.0);
-//				}
-//			}
-//
-//
-//			for (int i = 0; i < nxcgint+2; i++) {
-//				MG_phi2[i][0] = 0;
-//				MG_phi2[i][nycgint+1] = 0;
-//			}
-//			for (int j = 0; j < nycgint+2; j++) {
-//				MG_phi2[0][j] = 0;
-//				MG_phi2[nxcgint+1][j] = 0;
-//			}
-//		} else {
-//			for (int i = 0; i < nxcgint+2; i++) {
-//				for (int j = 0; j < nycgint+2; j++) {
-//					MG_phi2[i][j] = MG_phi1[i][j];
-//				}
-//			}
-//
-//			for (int i = 1; i < nxint+1; i++)
-//			{
-//				for (int j = 1; j < nyint+1; j++) {
-//					MG_phi1[i][j] = bilinearinterp(MG_phi2, i*(double)(nxcgint+1.0)/((double)nx-1.0), j*(double)(nycgint+1.0)/((double)ny-1.0));
-//				}
-//			}
-//
-//		}
-//	}
-//
-//
-//	int poissonsteps = stepsarray[maxfineness+1];
-//
-//	double alpha = (ds*ds);
-//	double beta = 4;
-//
-//	for (int i = 0; i < nx; i++) {
-//		for (int j = 0; j < ny; j++) {
-//			MG_rho[i][j] = MG_rho0[i][j];
-//			MG_epsx[maxfineness+1][i][j] = epsx[i][j];
-//			MG_epsy[maxfineness+1][i][j] = epsy[i][j];
-//		}
-//	}
-//
-//	JacobiIteration(poissonsteps, nxint, nyint, alpha, beta, ds, maxfineness+1, debug, computePhi);
-//
-//	if (correctEfield) {
-//		for (int i = 0; i < nx-1; i++)
-//		{
-//			for (int j = 0; j < ny-1; j++)
-//			{
-//				Ex[i][j] = Ex[i][j] + (MG_phi1[i+1][j]-MG_phi1[i][j])/ds;
-//				Ey[i][j] = Ey[i][j] + (MG_phi1[i][j+1]-MG_phi1[i][j])/ds;
-//			}
-//		}
-//	}
-//	if (computePhi)
-//	{
-//		for (int i = 0; i < nx; i++)
-//		{
-//			for (int j = 0; j < ny; j++)
-//			{
-//				phi[i][j] = phi[i][j] + MG_phi1[i][j];
-//			}
-//		}
-//	}
-//}
-//
-//
-//void JacobiIteration(int steps, int xbound, int ybound, double alpha, double beta, double gridsize, int fineness, boolean debug, boolean calcPhi) {
-//
-//	if (calcPhi) {
-//		for (int poissonit = 0; poissonit < steps; poissonit++) {
-//			for (int i = 1; i < xbound+1; i++) {
-//				for (int j = 1; j < ybound+1; j++) {
-//					MG_phi2[i][j] = (MG_phi1[i-1][j] + MG_phi1[i+1][j] + MG_phi1[i][j-1] + MG_phi1[i][j+1] + MG_rho[i][j]*alpha)/4.0;
-//				}
-//			}
-//			for (int i = 1; i < xbound+1; i++) {
-//				for (int j = 1; j < ybound+1; j++) {
-//					MG_phi1[i][j] = ((MG_phi2[i-1][j] + MG_phi2[i+1][j] + MG_phi2[i][j-1] + MG_phi2[i][j+1]) + MG_rho[i][j]*alpha)/4.0;
-//				}
-//			}
-//		}
-//	} else {
-//		for (int i = 1; i < xbound+1; i++) {
-//			for (int j = 1; j < ybound+1; j++) {
-//				MG_eps_avg[i][j] = (MG_epsx[fineness][i-1][j]+MG_epsx[fineness][i][j]+MG_epsy[fineness][i][j-1]+MG_epsy[fineness][i][j]);
-//			}
-//		}
-//
-//		for (int poissonit = 0; poissonit < steps; poissonit++) {
-//			for (int i = 1; i < xbound+1; i++) {
-//				for (int j = 1; j < ybound+1; j++) {
-//					MG_phi2[i][j] = ((MG_phi1[i-1][j]*MG_epsx[fineness][i-1][j]
-//																			 + MG_phi1[i+1][j]*MG_epsx[fineness][i][j]
-//																													+ MG_phi1[i][j-1]*MG_epsy[fineness][i][j-1]
-//																																						   + MG_phi1[i][j+1]*MG_epsy[fineness][i][j])
-//							+ MG_rho[i][j]*alpha)/MG_eps_avg[i][j];
-//				}
-//			}
-//			for (int i = 1; i < xbound+1; i++) {
-//				for (int j = 1; j < ybound+1; j++) {
-//					MG_phi1[i][j] = ((MG_phi2[i-1][j]*MG_epsx[fineness][i-1][j]
-//																			 + MG_phi2[i+1][j]*MG_epsx[fineness][i][j]
-//																													+ MG_phi2[i][j-1]*MG_epsy[fineness][i][j-1]
-//																																						   + MG_phi2[i][j+1]*MG_epsy[fineness][i][j])
-//							+ MG_rho[i][j]*alpha)/MG_eps_avg[i][j];
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//void downscale(double[][] source, double[][] dest, int sx, int sy, int dx, int dy, double soffsetx, double soffsety, double sspacing, double doffsetx, double doffsety, double dspacing) {
-//	for (int i = 0; i <= dx; i++) {
-//		for (int j = 0; j < dy; j++) {
-//			dest[i][j] = 0;
-//		}
-//	}
-//	double scalefactor = (sspacing*sspacing/(dspacing*dspacing));
-//	for (int i = 0; i <= sx; i++) {
-//		for (int j = 0; j <= sy; j++) {
-//			double cx = (i*sspacing + soffsetx - doffsetx)/dspacing;
-//			double cy = (j*sspacing + soffsety - doffsety)/dspacing;
-//			int xfloor = (int)std::floor(cx);
-//			int yfloor = (int)std::floor(cy);
-//			double fx = cx - xfloor;
-//			double fy = cy - yfloor;
-//			if (xfloor < 0) {
-//				xfloor = 0;
-//				fx = 0.0;
-//			} else if (xfloor >= dx) {
-//				xfloor = dx - 1;
-//				fx = 1.0;
-//			}
-//			if (yfloor < 0) {
-//				yfloor = 0;
-//				fy = 0.0;
-//			} else if (yfloor >= dy) {
-//				yfloor = dy - 1;
-//				fy = 1.0;
-//			}
-//			double srcval = source[i][j]*scalefactor;
-//			dest[xfloor][yfloor] += srcval*(1-fx)*(1-fy);
-//			dest[xfloor+1][yfloor] += srcval*fx*(1-fy);
-//			dest[xfloor][yfloor+1] += srcval*(1-fx)*fy;
-//			dest[xfloor+1][yfloor+1] += srcval*fx*fy;
-//		}
-//	}
-//}
+void downscale(double* source, double* dest, int steps, int nx, int ny) {
+	for (int i = 0; i < nx; i++) {
+		for (int j = 0; j < ny; j++) {
+			dest[(steps * nx + i) * ny + j] = source[i * ny + j];
+		}
+	}
+	int nx_d = nx;
+	int ny_d = ny;
+	for (int k = steps-1; k >= 0; k--) {
+		nx_d = nx_d/2;
+		ny_d = ny_d/2;
 
-void JacobiIteration(int nx, int ny, int steps, int xbound, int ybound, double alpha, double beta, double gridsize, int fineness, bool calcPhi,
-		double* MG_phi1,
-		double* MG_phi2,
-		double* MG_rho,
-		double* MG_epsx,
-		double* MG_epsy,
-		double* MG_eps_avg
+		for (int i = 0; i < nx_d; i++) {
+			for (int j = 0; j < ny_d; j++) {
+				dest[(k * nx + i) * ny + j] = 0.25*(dest[((k+1) * nx + 2*i) * ny + 2*j]+dest[((k+1) * nx + (2*i+1)) * ny + 2*j]+dest[((k+1) * nx + 2*i) * ny + 2*j+1]+dest[((k+1) * nx + (2*i+1)) * ny + 2*j+1]);
+			}
+		}
+	}
+}
+
+void JacobiIteration(int nx, int ny, int steps, int xbound, int ybound, double alpha, int fineness, bool calcPhi,
+	double* MG_phi1,
+	double* MG_phi2,
+	double* MG_rho,
+	double* MG_epsx,
+	double* MG_epsy,
+	double* MG_eps_avg
 
 ) {
-	if (calcPhi) {
-		for (int p = 0; p < steps; p++) {
-			for (int i = 1; i < xbound + 1; i++) {
-				for (int j = 1; j < ybound + 1; j++) {
-					int ij = i * ny + j;
-					MG_phi2[ij] = (MG_phi1[(i - 1) * ny + j] + MG_phi1[(i + 1) * ny + j] +
-							MG_phi1[i * ny + (j - 1)] + MG_phi1[i * ny + (j + 1)] +
-							MG_rho[ij] * alpha) / 4.0;
-				}
-			}
-			for (int i = 1; i < xbound + 1; i++) {
-				for (int j = 1; j < ybound + 1; j++) {
-					int ij = i * ny + j;
-					MG_phi1[ij] = (MG_phi2[(i - 1) * ny + j] + MG_phi2[(i + 1) * ny + j] +
-							MG_phi2[i * ny + (j - 1)] + MG_phi2[i * ny + (j + 1)] +
-							MG_rho[ij] * alpha) / 4.0;
-				}
-			}
-		}
-	} else {
-		for (int i = 1; i < xbound + 1; i++) {
-			for (int j = 1; j < ybound + 1; j++) {
+if (calcPhi) {
+	for (int p = 0; p < steps; p++) {
+		for (int i = 1; i < xbound - 1; i++) {
+			for (int j = 1; j < ybound - 1; j++) {
 				int ij = i * ny + j;
-				MG_eps_avg[ij] = MG_epsx[(fineness * nx + i - 1) * ny + j] + MG_epsx[(fineness * nx + i) * ny + j] +
-						MG_epsy[(fineness * nx + i) * ny + j - 1] + MG_epsy[(fineness * nx + i) * ny + j];
+				MG_phi2[ij] = (0.1*MG_phi1[i * ny + j] + (MG_phi1[(i - 1) * ny + j] + MG_phi1[(i + 1) * ny + j] +
+						MG_phi1[i * ny + (j - 1)] + MG_phi1[i * ny + (j + 1)] +
+						MG_rho[(fineness * nx + i) * ny + j] * alpha) / 4.0) / 1.1;
 			}
 		}
-
-		for (int p = 0; p < steps; p++) {
-			for (int i = 1; i < xbound + 1; i++) {
-				for (int j = 1; j < ybound + 1; j++) {
-					int ij = i * ny + j;
-					MG_phi2[ij] = (MG_phi1[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
-							MG_phi1[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
-							MG_phi1[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
-							MG_phi1[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
-							MG_rho[ij] * alpha) / MG_eps_avg[ij];
-				}
-			}
-
-			for (int i = 1; i < xbound + 1; i++) {
-				for (int j = 1; j < ybound + 1; j++) {
-					int ij = i * ny + j;
-					MG_phi1[ij] = (MG_phi2[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
-							MG_phi2[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
-							MG_phi2[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
-							MG_phi2[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
-							MG_rho[ij] * alpha) / MG_eps_avg[ij];
-				}
+		for (int i = 1; i < xbound - 1; i++) {
+			for (int j = 1; j < ybound - 1; j++) {
+				int ij = i * ny + j;
+				MG_phi1[ij] = (0.1*MG_phi2[i * ny + j] + (MG_phi2[(i - 1) * ny + j] + MG_phi2[(i + 1) * ny + j] +
+						MG_phi2[i * ny + (j - 1)] + MG_phi2[i * ny + (j + 1)] +
+						MG_rho[(fineness * nx + i) * ny + j] * alpha) / 4.0) / 1.1;
 			}
 		}
 	}
-}
-
-void downscale(int nx, int ny, double* source, double* dest, int sx, int sy, int dx, int dy, double soffsetx, double soffsety, double sspacing, double doffsetx, double doffsety, double dspacing) {
-	for (int i = 0; i <= dx; i++) {
-		for (int j = 0; j < dy; j++) {
-			dest[i * ny + j] = 0;
+} else {
+	for (int i = 1; i < xbound - 1; i++) {
+		for (int j = 1; j < ybound - 1; j++) {
+			int ij = i * ny + j;
+			MG_eps_avg[ij] = MG_epsx[(fineness * nx + i - 1) * ny + j] + MG_epsx[(fineness * nx + i) * ny + j] +
+					MG_epsy[(fineness * nx + i) * ny + j - 1] + MG_epsy[(fineness * nx + i) * ny + j];
 		}
 	}
-	double scalefactor = (sspacing * sspacing / (dspacing * dspacing));
-	for (int i = 0; i <= sx; i++) {
-		for (int j = 0; j <= sy; j++) {
-			double cx = (i * sspacing + soffsetx - doffsetx) / dspacing;
-			double cy = (j * sspacing + soffsety - doffsety) / dspacing;
-			int xfloor = (int) std::floor(cx);
-			int yfloor = (int) std::floor(cy);
-			double fx = cx - xfloor;
-			double fy = cy - yfloor;
-			if (xfloor < 0) {
-				xfloor = 0;
-				fx = 0.0;
-			} else if (xfloor >= dx) {
-				xfloor = dx - 1;
-				fx = 1.0;
+
+	for (int p = 0; p < steps; p++) {
+		for (int i = 1; i < xbound - 1; i++) {
+			for (int j = 1; j < ybound - 1; j++) {
+				int ij = i * ny + j;
+				MG_phi2[ij] = (0.1*MG_phi1[i * ny + j] + (MG_phi1[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
+						MG_phi1[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
+						MG_phi1[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
+						MG_phi1[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
+						MG_rho[(fineness * nx + i) * ny + j] * alpha) / MG_eps_avg[ij]) / 1.1;
 			}
-			if (yfloor < 0) {
-				yfloor = 0;
-				fy = 0.0;
-			} else if (yfloor >= dy) {
-				yfloor = dy - 1;
-				fy = 1.0;
+		}
+
+		for (int i = 1; i < xbound - 1; i++) {
+			for (int j = 1; j < ybound - 1; j++) {
+				int ij = i * ny + j;
+				MG_phi1[ij] = (0.1*MG_phi2[i * ny + j] + (MG_phi2[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
+						MG_phi2[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
+						MG_phi2[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
+						MG_phi2[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
+						MG_rho[(fineness * nx + i) * ny + j] * alpha) / MG_eps_avg[ij]) / 1.1;
 			}
-			double srcval = source[i * ny + j] * scalefactor;
-			dest[xfloor * ny + yfloor] += srcval * (1 - fx) * (1 - fy);
-			dest[(xfloor + 1) * ny + yfloor] += srcval * fx * (1 - fy);
-			dest[xfloor * ny + (yfloor + 1)] += srcval * (1 - fx) * fy;
-			dest[(xfloor + 1) * ny + (yfloor + 1)] += srcval * fx * fy;
 		}
 	}
 }
-
-double bilinearinterp(int nx, int ny, double* array, double x, double y) {
-	int xfloor = (int)std::floor(x);
-	int yfloor = (int)std::floor(y);
-	double fx = x - xfloor;
-	double fy = y - yfloor;
-	if (std::abs(x-std::round(x)) < 1e-2 || std::abs(y-std::round(y)) < 1e-2) {
-		int i = (int)std::round(x);
-		int j = (int)std::round(y);
-		if (i < 0) i = 0;
-		if (j < 0) j = 0;
-		if (i >= nx) i = nx - 1;
-		if (j >= ny) j = ny - 1;
-		return array[i*ny + j];
-	}
-
-	if (xfloor < 0) {
-		xfloor = 0;
-		fx = 0.0;
-	} else if (xfloor >= nx - 1) {
-		xfloor = nx - 2;
-		fx = 1.0;
-	}
-	if (yfloor < 0) {
-		yfloor = 0;
-		fy = 0.0;
-	} else if (yfloor >= ny - 1) {
-		yfloor = ny - 2;
-		fy = 1.0;
-	}
-	double va = array[xfloor*ny + yfloor]*(1.0-fx) + array[(xfloor+1) * ny + yfloor]*fx;
-	double vb = array[xfloor * ny + yfloor+1]*(1.0-fx) + array[(xfloor+1) * ny + yfloor+1]*fx;
-
-	return va*(1.0-fy) + vb*fy;
 }
 
-
-void multigridSolve(int nx, int ny, bool correctEfield, bool computePhi,
+void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, bool computePhi,
 		double* MG_phi1,
 		double* MG_phi2,
 		double* MG_rho,
@@ -529,7 +263,9 @@ void multigridSolve(int nx, int ny, bool correctEfield, bool computePhi,
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
 			MG_phi1[i * ny + j] = 0;
-			MG_rho[i * ny + j] = 0;
+			for (int k = 0; k <= log2_resolution; k++) {
+				MG_rho[(k * nx + i) * ny + j] = 0;
+			}
 		}
 	}
 
@@ -552,81 +288,54 @@ void multigridSolve(int nx, int ny, bool correctEfield, bool computePhi,
 		}
 	}
 
-	int nxint = nx - 2;
-	int nyint = ny - 2;
-	int stepsarray[11] = {0, 0, 200, 200, 200, 200, 200, 50, 20, 20, 20};
-	int maxfineness = (int) std::floor(std::log(nx) / std::log(2));
+	int stepsarray[9] = {0, 0, 200, 200, 200, 200, 200, 50, 20};
+	
+	downscale(MG_rho0, MG_rho, log2_resolution, nx, ny);
+	
+	for (int fineness = 2; fineness <= log2_resolution; fineness++) {
+		int nx_tmp = (1 << fineness);
+		int ny_tmp = (1 << fineness);
+		double gridsize = width/(1 << fineness);
+		
+		int poissonsteps = stepsarray[std::min(fineness, 8)];
+		double alpha = (gridsize*gridsize);
 
-	for (int fineness = 2; fineness <= maxfineness; fineness++) {
-		int nxcgint = (1 << fineness) - 1;
-		int nycgint = (1 << fineness) - 1;
-		double gridsize = width / (1 << fineness);
-
-		downscale(nx, ny, MG_rho0, MG_rho, nx - 1, ny - 1, nxcgint + 1, nycgint + 1, 0, 0, ds, 0, 0, gridsize);
-
-		int poissonsteps = stepsarray[fineness];
-		double alpha = gridsize * gridsize;
-		double beta = 4;
-
-		JacobiIteration(nx, ny, poissonsteps, nxcgint, nycgint, alpha, beta, gridsize, fineness, computePhi,
+		JacobiIteration(nx, ny, poissonsteps, nx_tmp, ny_tmp, alpha, fineness, computePhi,
 				MG_phi1, MG_phi2, MG_rho, MG_epsx, MG_epsy, MG_eps_avg);
 
-		if (fineness < maxfineness) {
-			for (int i = 0; i < nxcgint + 2; i++) {
-				for (int j = 0; j < nycgint + 2; j++) {
-					MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
-				}
-			}
+		if (fineness == log2_resolution)
+			break;
 
-			nxcgint = (1 << (fineness + 1)) - 1;
-			nycgint = (1 << (fineness + 1)) - 1;
-			gridsize = width / (1 << (fineness + 1));
-
-			for (int i = 1; i < nxcgint + 1; i++) {
-				for (int j = 1; j < nycgint + 1; j++) {
-					MG_phi1[i * ny + j] = bilinearinterp(nx, ny, MG_phi2, i / 2.0, j / 2.0);
-				}
+		for (int i = 0; i < nx_tmp; i++) {
+			for (int j = 0; j < ny_tmp; j++) {
+				MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
 			}
-
-			for (int i = 0; i < nxcgint + 2; i++) {
-				MG_phi2[i * ny] = 0;
-				MG_phi2[i * ny + nycgint + 1] = 0;
+		}
+		
+		for (int i = 0; i < nx_tmp; i++)
+		{
+			for (int j = 0; j < nx_tmp; j++) {
+				MG_phi1[(2*i) * ny + 2*j] = MG_phi2[i * ny + j];
+				MG_phi1[(2*i+1) * ny + 2*j] = MG_phi2[i * ny + j];
+				MG_phi1[(2*i) * ny + 2*j+1] = MG_phi2[i * ny + j];
+				MG_phi1[(2*i+1) * ny + 2*j+1] = MG_phi2[i * ny + j];
 			}
-			for (int j = 0; j < nycgint + 2; j++) {
-				MG_phi2[j] = 0;
-				MG_phi2[(nxcgint + 1) * ny + j] = 0;
+		}
+		
+		/*for (int i = 1; i < 2*nx_tmp-1; i++)
+		{
+			for (int j = 1; j < 2*nx_tmp-1; j++) {
+				MG_phi1[i][j] = this.bilinearinterp(MG_phi2, (i-0.5)/2.0, (j-0.5)/2.0);
 			}
-		} else {
-			for (int i = 0; i < nxcgint + 2; i++) {
-				for (int j = 0; j < nycgint + 2; j++) {
-					MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
-				}
-			}
-
-			for (int i = 1; i < nxint + 1; i++) {
-				for (int j = 1; j < nyint + 1; j++) {
-					MG_phi1[i * ny + j] = bilinearinterp(nx, ny, MG_phi2, i * (double) (nxcgint + 1) / (nx - 1.0),
-							j * (double) (nycgint + 1) / (ny - 1.0));
-				}
+		}*/
+		
+		for (int i = 0; i < 2*nx_tmp; i++) {
+			for (int j = 0; j < 2*ny_tmp; j++) {
+				MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
 			}
 		}
 	}
 
-	int poissonsteps = stepsarray[maxfineness + 1];
-	double alpha = ds * ds;
-	double beta = 4;
-
-	for (int i = 0; i < nx; i++) {
-		for (int j = 0; j < ny; j++) {
-			MG_rho[i * ny + j] = MG_rho0[i * ny + j];
-			MG_epsx[((maxfineness + 1) * nx + i) * ny + j] = epsx[i * ny + j];
-			MG_epsy[((maxfineness + 1) * nx + i) * ny + j] = epsy[i * ny + j];
-		}
-	}
-
-	JacobiIteration(nx, ny, poissonsteps, nxint, nyint, alpha, beta, ds, maxfineness + 1, computePhi,
-			MG_phi1, MG_phi2, MG_rho, MG_epsx, MG_epsy, MG_eps_avg
-	);
 
 	if (correctEfield) {
 		for (int i = 0; i < nx - 1; i++) {
