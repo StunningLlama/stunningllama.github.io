@@ -35,7 +35,7 @@ Some of the inaccuracies include:
 <li>Finally, the materials don't correspond to specific counterparts in real-life. The material parameters were chosen to demonstrate the concepts as clearly as possible. For example, the charge carrier mobility is about 1500x greater than Silicon.</li>
 </ul>
 
-<h1>Simulation settings</h1>
+<h1>Simulation details</h1>
 The main way to interact with circuits is to change the strength of voltage sources and turn switches on and off. The quickest way to get started is to load one of the examples,
 uncheck the pause button and click on one of the voltage sources. You can then adjust the voltage using a slider located on the right panel.
 <h2>Tools</h2>
@@ -58,7 +58,7 @@ uncheck the pause button and click on one of the voltage sources. You can then a
 
 <h2>Controls</h2>
 <ul>
-    <li><strong>P/Space:</strong> Pause & unpause</li>
+    <li><strong>P/Space:</strong> Pause &amp; unpause</li>
     <li><strong>F:</strong> Advance frame</li>
     <li><strong>Q:</strong> Change brush shape</li>
     <li><strong>C:</strong> Toggle material color</li>
@@ -106,6 +106,17 @@ uncheck the pause button and click on one of the voltage sources. You can then a
 In general, the color red is associated with either holes or a positive charge. Blue represents electrons or negative charge. White means both electrons and holes exist a location.
 In the rest of the cases, yellow represents a positve quantity (eg. chemical potential or magnetic field), while cyan is negative. Finally, green is used for quantites that are always positive (eg. energy density).
 Note: Each material also has its own color which is unrelated to the aforementioned color scheme.
+
+<h2>What do voltmeters actually measure?</h2>
+You might notice that the reading from a voltage probe doesn't match the electric potential Φ. In reality, voltmeters do not measure Φ but rather differences in electrochemical potential of charge carriers.
+Things get a bit trickier when we ask what the voltage is in a piece of semiconductor, becuase now there are multiple charge carriers! In this case we can try to define voltage as the reading we get when we stick a small metallic
+probe at a certain point. This can actually be performed in the simulation, and the result is that the electrochemical potential of the metal lies between that of electrons and holes, closer to whichever one has a larger density.
+I approximate this with a simple weighted average, the result of which is displayed on the voltage probe.
+
+<h2>Why does the magnetic field vanish outside of circuits?</h2>
+Because the simulation is in 2D, circuits actually extend infinitely in the z-direction (out of the page), so current flowing through a closed circuit has the same effect as current flowing through a 3D solenoid.
+If you recall from E&amp;M class, the magnetic field within an infinitely long solenoid is entirely contained within it. This is certainly a point of departure from how we expect circuits to behave. It means that each current loop has its own inductance,
+and trying to create "inductors" that behave like their 3d counterparts is quite tricky.
 <p>
     Copyright (c) 2025 Brandon Li<br>
     <a href="mailto:brandonli.lex@gmail.com">brandonli.lex@gmail.com</a>
