@@ -17,7 +17,7 @@ double logmean(double x, double y)
 }
 
 void iterateSimulation(
-		int nx, int ny,
+		int nx, int ny, int stride,
 		double dt, double ds,
 		double Hz_dissipation, double absorbing_coeff,
 		double mu_electron, double mu_hole,
@@ -44,22 +44,22 @@ void iterateSimulation(
 	// Laplacian of Hz
 	for (int i = 1; i < nx - 2; i++) {
 		for (int j = 1; j < ny - 2; j++) {
-			Hz_laplacian[i * ny + j] = (
-					Hz[(i + 1) * ny + j] + Hz[i * ny + j + 1] +
-					Hz[(i - 1) * ny + j] + Hz[i * ny + j - 1] -
-					4 * Hz[i * ny + j]) / (ds * ds);
+			Hz_laplacian[i * stride + j] = (
+					Hz[(i + 1) * stride + j] + Hz[i * stride + j + 1] +
+					Hz[(i - 1) * stride + j] + Hz[i * stride + j - 1] -
+					4 * Hz[i * stride + j]) / (ds * ds);
 		}
 	}
 
 	// Update Hz
 	for (int i = 0; i < nx - 1; i++) {
 		for (int j = 0; j < ny - 1; j++) {
-			int ij = i * ny + j;
+			int ij = i * stride + j;
 			double sigma = absorptivity[ij] * mu_z[ij] * absorbing_coeff;
 
 			double denom = 1 + 0.5 * dt * sigma / mu_z[ij];
 			double numer = Hz[ij] * (1 - 0.5 * dt * sigma / mu_z[ij]) +
-					((- (Ey[(i + 1) * ny + j] - Ey[ij]) + (Ex[ij + 1] - Ex[ij])) * dt / (ds * mu_z[ij])) +
+					((- (Ey[(i + 1) * stride + j] - Ey[ij]) + (Ex[ij + 1] - Ex[ij])) * dt / (ds * mu_z[ij])) +
 					Hz_dissipation * dt * Hz_laplacian[ij];
 
 			Hz[ij] = numer / denom;
@@ -69,9 +69,9 @@ void iterateSimulation(
 	// Update charges and mobilities
 	for (int i = 1; i < nx - 1; i++) {
 		for (int j = 1; j < ny - 1; j++) {
-			int ij = i * ny + j;
-			int ijL = (i - 1) * ny + j;
-			int ijB = i * ny + j - 1;
+			int ij = i * stride + j;
+			int ijL = (i - 1) * stride + j;
+			int ijB = i * stride + j - 1;
 
 			double gen = conducting[ij] * R[ij] * (K[ij] - rho_n[ij] * rho_p[ij] / (q_n * q_p));
 
@@ -89,20 +89,20 @@ void iterateSimulation(
 	// Update Ex
 	for (int i = 0; i < nx - 1; i++) {
 		for (int j = 1; j < ny - 1; j++) {
-			int ij = i * ny + j;
+			int ij = i * stride + j;
 			double ex_prev = Ex[ij];
 
-			double mf = std::min(mobility_factor[(i + 1) * ny + j], mobility_factor[ij]);
+			double mf = std::min(mobility_factor[(i + 1) * stride + j], mobility_factor[ij]);
 
-			double sigma_n = conducting_x[ij] * mf * mu_electron * logmean(-rho_n[(i + 1) * ny + j], -rho_n[ij]);
-			double sigma_p = conducting_x[ij] * mf * mu_hole * logmean(rho_p[(i + 1) * ny + j], rho_p[ij]);
+			double sigma_n = conducting_x[ij] * mf * mu_electron * logmean(-rho_n[(i + 1) * stride + j], -rho_n[ij]);
+			double sigma_p = conducting_x[ij] * mf * mu_hole * logmean(rho_p[(i + 1) * stride + j], rho_p[ij]);
 
 			Jx_abs[ij] = 0;
 
-			Jx_n[ij] = conducting_x[ij] * (-mf * D_electron * (rho_n[(i + 1) * ny + j] - rho_n[ij]) / ds +
+			Jx_n[ij] = conducting_x[ij] * (-mf * D_electron * (rho_n[(i + 1) * stride + j] - rho_n[ij]) / ds +
 					sigma_n * (emfx[ij] + cmfx_n[ij] / q_n));
 
-			Jx_p[ij] = conducting_x[ij] * (-mf * D_hole * (rho_p[(i + 1) * ny + j] - rho_p[ij]) / ds +
+			Jx_p[ij] = conducting_x[ij] * (-mf * D_hole * (rho_p[(i + 1) * stride + j] - rho_p[ij]) / ds +
 					sigma_p * (emfx[ij] + cmfx_p[ij] / q_p));
 
 			double sigma = sigma_n + sigma_p + absorptivity_x[ij] * epsx[ij] * absorbing_coeff;
@@ -120,26 +120,26 @@ void iterateSimulation(
 	// Update Ey
 	for (int i = 1; i < nx - 1; i++) {
 		for (int j = 0; j < ny - 1; j++) {
-			int ij = i * ny + j;
+			int ij = i * stride + j;
 			double ey_prev = Ey[ij];
 
-			double mf = std::min(mobility_factor[i * ny + j + 1], mobility_factor[ij]);
+			double mf = std::min(mobility_factor[i * stride + j + 1], mobility_factor[ij]);
 
-			double sigma_n = conducting_y[ij] * mf * mu_electron * logmean(-rho_n[i * ny + j + 1], -rho_n[ij]);
-			double sigma_p = conducting_y[ij] * mf * mu_hole * logmean(rho_p[i * ny + j + 1], rho_p[ij]);
+			double sigma_n = conducting_y[ij] * mf * mu_electron * logmean(-rho_n[i * stride + j + 1], -rho_n[ij]);
+			double sigma_p = conducting_y[ij] * mf * mu_hole * logmean(rho_p[i * stride + j + 1], rho_p[ij]);
 
 			Jy_abs[ij] = 0;
 
-			Jy_n[ij] = conducting_y[ij] * (-mf * D_electron * (rho_n[i * ny + j + 1] - rho_n[ij]) / ds +
+			Jy_n[ij] = conducting_y[ij] * (-mf * D_electron * (rho_n[i * stride + j + 1] - rho_n[ij]) / ds +
 					sigma_n * (emfy[ij] + cmfy_n[ij] / q_n));
 
-			Jy_p[ij] = conducting_y[ij] * (-mf * D_hole * (rho_p[i * ny + j + 1] - rho_p[ij]) / ds +
+			Jy_p[ij] = conducting_y[ij] * (-mf * D_hole * (rho_p[i * stride + j + 1] - rho_p[ij]) / ds +
 					sigma_p * (emfy[ij] + cmfy_p[ij] / q_p));
 
 			double sigma = sigma_n + sigma_p + absorptivity_y[ij] * epsy[ij] * absorbing_coeff;
 			double jy = Jy_abs[ij] + Jy_n[ij] + Jy_p[ij];
 
-			Ey[ij] = (Ey[ij] * (1 - 0.5 * dt * sigma / epsy[ij]) - ((Hz[ij] - Hz[(i - 1) * ny + j]) / ds + jy) * dt / epsy[ij]) /
+			Ey[ij] = (Ey[ij] * (1 - 0.5 * dt * sigma / epsy[ij]) - ((Hz[ij] - Hz[(i - 1) * stride + j]) / ds + jy) * dt / epsy[ij]) /
 					(1 + 0.5 * dt * sigma / epsy[ij]);
 
 			Jy_abs[ij] += 0.5 * absorptivity_y[ij] * epsy[ij] * absorbing_coeff * (ey_prev + Ey[ij]);
@@ -151,19 +151,19 @@ void iterateSimulation(
 	// Enforce boundary conditions
 	for (int j = 0; j < ny - 1; j++) {
 		Ey[j] = 0;
-		Ey[(nx - 1) * ny + j] = 0;
+		Ey[(nx - 1) * stride + j] = 0;
 	}
 
 	for (int i = 0; i < nx - 1; i++) {
-		Ex[i * ny + 0] = 0;
-		Ex[i * ny + (ny - 1)] = 0;
+		Ex[i * stride + 0] = 0;
+		Ex[i * stride + (ny - 1)] = 0;
 	}
 }
 
-void downscale(double* source, double* dest, int steps, int nx, int ny) {
+void downscale(double* source, double* dest, int steps, int nx, int ny, int stride) {
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
-			dest[(steps * nx + i) * ny + j] = source[i * ny + j];
+			dest[(steps * stride + i) * stride + j] = source[i * stride + j];
 		}
 	}
 	int nx_d = nx;
@@ -174,13 +174,13 @@ void downscale(double* source, double* dest, int steps, int nx, int ny) {
 
 		for (int i = 0; i < nx_d; i++) {
 			for (int j = 0; j < ny_d; j++) {
-				dest[(k * nx + i) * ny + j] = 0.25*(dest[((k+1) * nx + 2*i) * ny + 2*j]+dest[((k+1) * nx + (2*i+1)) * ny + 2*j]+dest[((k+1) * nx + 2*i) * ny + 2*j+1]+dest[((k+1) * nx + (2*i+1)) * ny + 2*j+1]);
+				dest[(k * stride + i) * stride + j] = 0.25*(dest[((k+1) * stride + 2*i) * stride + 2*j]+dest[((k+1) * stride + (2*i+1)) * stride + 2*j]+dest[((k+1) * stride + 2*i) * stride + 2*j+1]+dest[((k+1) * stride + (2*i+1)) * stride + 2*j+1]);
 			}
 		}
 	}
 }
 
-void JacobiIteration(int nx, int ny, int steps, int xbound, int ybound, double alpha, int fineness, bool calcPhi,
+void JacobiIteration(int nx, int ny, int stride, int steps, int xbound, int ybound, double alpha, int fineness, bool calcPhi,
 	double* MG_phi1,
 	double* MG_phi2,
 	double* MG_rho,
@@ -193,57 +193,57 @@ if (calcPhi) {
 	for (int p = 0; p < steps; p++) {
 		for (int i = 1; i < xbound - 1; i++) {
 			for (int j = 1; j < ybound - 1; j++) {
-				int ij = i * ny + j;
-				MG_phi2[ij] = (0.1*MG_phi1[i * ny + j] + (MG_phi1[(i - 1) * ny + j] + MG_phi1[(i + 1) * ny + j] +
-						MG_phi1[i * ny + (j - 1)] + MG_phi1[i * ny + (j + 1)] +
-						MG_rho[(fineness * nx + i) * ny + j] * alpha) / 4.0) / 1.1;
+				int ij = i * stride + j;
+				MG_phi2[ij] = (0.1*MG_phi1[i * stride + j] + (MG_phi1[(i - 1) * stride + j] + MG_phi1[(i + 1) * stride + j] +
+						MG_phi1[i * stride + (j - 1)] + MG_phi1[i * stride + (j + 1)] +
+						MG_rho[(fineness * stride + i) * stride + j] * alpha) / 4.0) / 1.1;
 			}
 		}
 		for (int i = 1; i < xbound - 1; i++) {
 			for (int j = 1; j < ybound - 1; j++) {
-				int ij = i * ny + j;
-				MG_phi1[ij] = (0.1*MG_phi2[i * ny + j] + (MG_phi2[(i - 1) * ny + j] + MG_phi2[(i + 1) * ny + j] +
-						MG_phi2[i * ny + (j - 1)] + MG_phi2[i * ny + (j + 1)] +
-						MG_rho[(fineness * nx + i) * ny + j] * alpha) / 4.0) / 1.1;
+				int ij = i * stride + j;
+				MG_phi1[ij] = (0.1*MG_phi2[i * stride + j] + (MG_phi2[(i - 1) * stride + j] + MG_phi2[(i + 1) * stride + j] +
+						MG_phi2[i * stride + (j - 1)] + MG_phi2[i * stride + (j + 1)] +
+						MG_rho[(fineness * stride + i) * stride + j] * alpha) / 4.0) / 1.1;
 			}
 		}
 	}
 } else {
 	for (int i = 1; i < xbound - 1; i++) {
 		for (int j = 1; j < ybound - 1; j++) {
-			int ij = i * ny + j;
-			MG_eps_avg[ij] = MG_epsx[(fineness * nx + i - 1) * ny + j] + MG_epsx[(fineness * nx + i) * ny + j] +
-					MG_epsy[(fineness * nx + i) * ny + j - 1] + MG_epsy[(fineness * nx + i) * ny + j];
+			int ij = i * stride + j;
+			MG_eps_avg[ij] = MG_epsx[(fineness * stride + i - 1) * stride + j] + MG_epsx[(fineness * stride + i) * stride + j] +
+					MG_epsy[(fineness * stride + i) * stride + j - 1] + MG_epsy[(fineness * stride + i) * stride + j];
 		}
 	}
 
 	for (int p = 0; p < steps; p++) {
 		for (int i = 1; i < xbound - 1; i++) {
 			for (int j = 1; j < ybound - 1; j++) {
-				int ij = i * ny + j;
-				MG_phi2[ij] = (0.1*MG_phi1[i * ny + j] + (MG_phi1[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
-						MG_phi1[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
-						MG_phi1[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
-						MG_phi1[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
-						MG_rho[(fineness * nx + i) * ny + j] * alpha) / MG_eps_avg[ij]) / 1.1;
+				int ij = i * stride + j;
+				MG_phi2[ij] = (0.1*MG_phi1[i * stride + j] + (MG_phi1[(i - 1) * stride + j] * MG_epsx[(fineness * stride + i - 1) * stride + j] +
+						MG_phi1[(i + 1) * stride + j] * MG_epsx[(fineness * stride + i) * stride + j] +
+						MG_phi1[i * stride + (j - 1)] * MG_epsy[(fineness * stride + i) * stride + j - 1] +
+						MG_phi1[i * stride + (j + 1)] * MG_epsy[(fineness * stride + i) * stride + j] +
+						MG_rho[(fineness * stride + i) * stride + j] * alpha) / MG_eps_avg[ij]) / 1.1;
 			}
 		}
 
 		for (int i = 1; i < xbound - 1; i++) {
 			for (int j = 1; j < ybound - 1; j++) {
-				int ij = i * ny + j;
-				MG_phi1[ij] = (0.1*MG_phi2[i * ny + j] + (MG_phi2[(i - 1) * ny + j] * MG_epsx[(fineness * nx + i - 1) * ny + j] +
-						MG_phi2[(i + 1) * ny + j] * MG_epsx[(fineness * nx + i) * ny + j] +
-						MG_phi2[i * ny + (j - 1)] * MG_epsy[(fineness * nx + i) * ny + j - 1] +
-						MG_phi2[i * ny + (j + 1)] * MG_epsy[(fineness * nx + i) * ny + j] +
-						MG_rho[(fineness * nx + i) * ny + j] * alpha) / MG_eps_avg[ij]) / 1.1;
+				int ij = i * stride + j;
+				MG_phi1[ij] = (0.1*MG_phi2[i * stride + j] + (MG_phi2[(i - 1) * stride + j] * MG_epsx[(fineness * stride + i - 1) * stride + j] +
+						MG_phi2[(i + 1) * stride + j] * MG_epsx[(fineness * stride + i) * stride + j] +
+						MG_phi2[i * stride + (j - 1)] * MG_epsy[(fineness * stride + i) * stride + j - 1] +
+						MG_phi2[i * stride + (j + 1)] * MG_epsy[(fineness * stride + i) * stride + j] +
+						MG_rho[(fineness * stride + i) * stride + j] * alpha) / MG_eps_avg[ij]) / 1.1;
 			}
 		}
 	}
 }
 }
 
-void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, bool computePhi,
+void multigridSolve(int nx, int ny, int stride, int log2_resolution, bool correctEfield, bool computePhi,
 		double* MG_phi1,
 		double* MG_phi2,
 		double* MG_rho,
@@ -262,9 +262,9 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 ) {
 	for (int i = 0; i < nx; i++) {
 		for (int j = 0; j < ny; j++) {
-			MG_phi1[i * ny + j] = 0;
+			MG_phi1[i * stride + j] = 0;
 			for (int k = 0; k <= log2_resolution; k++) {
-				MG_rho[(k * nx + i) * ny + j] = 0;
+				MG_rho[(k * stride + i) * stride + j] = 0;
 			}
 		}
 	}
@@ -272,9 +272,9 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 	if (correctEfield) {
 		for (int i = 1; i < nx - 1; i++) {
 			for (int j = 1; j < ny - 1; j++) {
-				MG_rho0[i * ny + j] = ((Ex[i * ny + j] * epsx[i * ny + j] - Ex[(i - 1) * ny + j] * epsx[(i - 1) * ny + j] +
-						Ey[i * ny + j] * epsy[i * ny + j] - Ey[i * ny + j - 1] * epsy[i * ny + j - 1]) / ds) -
-						rho_free[i * ny + j];
+				MG_rho0[i * stride + j] = ((Ex[i * stride + j] * epsx[i * stride + j] - Ex[(i - 1) * stride + j] * epsx[(i - 1) * stride + j] +
+						Ey[i * stride + j] * epsy[i * stride + j] - Ey[i * stride + j - 1] * epsy[i * stride + j - 1]) / ds) -
+						rho_free[i * stride + j];
 			}
 		}
 	}
@@ -282,15 +282,15 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 	if (computePhi) {
 		for (int i = 1; i < nx - 1; i++) {
 			for (int j = 1; j < ny - 1; j++) {
-				MG_rho0[i * ny + j] = (Ex[i * ny + j] - Ex[(i - 1) * ny + j] + Ey[i * ny + j] - Ey[i * ny + j - 1]) / ds +
-						(phi[(i + 1) * ny + j] + phi[i * ny + j + 1] + phi[(i - 1) * ny + j] + phi[i * ny + j - 1] - 4 * phi[i * ny + j]) / (ds * ds);
+				MG_rho0[i * stride + j] = (Ex[i * stride + j] - Ex[(i - 1) * stride + j] + Ey[i * stride + j] - Ey[i * stride + j - 1]) / ds +
+						(phi[(i + 1) * stride + j] + phi[i * stride + j + 1] + phi[(i - 1) * stride + j] + phi[i * stride + j - 1] - 4 * phi[i * stride + j]) / (ds * ds);
 			}
 		}
 	}
 
-	int stepsarray[9] = {0, 0, 200, 200, 200, 200, 200, 50, 20};
+	int stepsarray[9] = {0, 0, 100, 100, 100, 100, 50, 25, 20};
 	
-	downscale(MG_rho0, MG_rho, log2_resolution, nx, ny);
+	downscale(MG_rho0, MG_rho, log2_resolution, nx, ny, stride);
 	
 	for (int fineness = 2; fineness <= log2_resolution; fineness++) {
 		int nx_tmp = (1 << fineness);
@@ -300,7 +300,7 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 		int poissonsteps = stepsarray[std::min(fineness, 8)];
 		double alpha = (gridsize*gridsize);
 
-		JacobiIteration(nx, ny, poissonsteps, nx_tmp, ny_tmp, alpha, fineness, computePhi,
+		JacobiIteration(nx, ny, stride, poissonsteps, nx_tmp, ny_tmp, alpha, fineness, computePhi,
 				MG_phi1, MG_phi2, MG_rho, MG_epsx, MG_epsy, MG_eps_avg);
 
 		if (fineness == log2_resolution)
@@ -308,17 +308,17 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 
 		for (int i = 0; i < nx_tmp; i++) {
 			for (int j = 0; j < ny_tmp; j++) {
-				MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
+				MG_phi2[i * stride + j] = MG_phi1[i * stride + j];
 			}
 		}
 		
 		for (int i = 0; i < nx_tmp; i++)
 		{
 			for (int j = 0; j < nx_tmp; j++) {
-				MG_phi1[(2*i) * ny + 2*j] = MG_phi2[i * ny + j];
-				MG_phi1[(2*i+1) * ny + 2*j] = MG_phi2[i * ny + j];
-				MG_phi1[(2*i) * ny + 2*j+1] = MG_phi2[i * ny + j];
-				MG_phi1[(2*i+1) * ny + 2*j+1] = MG_phi2[i * ny + j];
+				MG_phi1[(2*i) * stride + 2*j] = MG_phi2[i * stride + j];
+				MG_phi1[(2*i+1) * stride + 2*j] = MG_phi2[i * stride + j];
+				MG_phi1[(2*i) * stride + 2*j+1] = MG_phi2[i * stride + j];
+				MG_phi1[(2*i+1) * stride + 2*j+1] = MG_phi2[i * stride + j];
 			}
 		}
 		
@@ -331,7 +331,7 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 		
 		for (int i = 0; i < 2*nx_tmp; i++) {
 			for (int j = 0; j < 2*ny_tmp; j++) {
-				MG_phi2[i * ny + j] = MG_phi1[i * ny + j];
+				MG_phi2[i * stride + j] = MG_phi1[i * stride + j];
 			}
 		}
 	}
@@ -340,8 +340,8 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 	if (correctEfield) {
 		for (int i = 0; i < nx - 1; i++) {
 			for (int j = 0; j < ny - 1; j++) {
-				Ex[i * ny + j] += (MG_phi1[(i + 1) * ny + j] - MG_phi1[i * ny + j]) / ds;
-				Ey[i * ny + j] += (MG_phi1[i * ny + j + 1] - MG_phi1[i * ny + j]) / ds;
+				Ex[i * stride + j] += (MG_phi1[(i + 1) * stride + j] - MG_phi1[i * stride + j]) / ds;
+				Ey[i * stride + j] += (MG_phi1[i * stride + j + 1] - MG_phi1[i * stride + j]) / ds;
 			}
 		}
 	}
@@ -349,7 +349,7 @@ void multigridSolve(int nx, int ny, int log2_resolution, bool correctEfield, boo
 	if (computePhi) {
 		for (int i = 0; i < nx; i++) {
 			for (int j = 0; j < ny; j++) {
-				phi[i * ny + j] += MG_phi1[i * ny + j];
+				phi[i * stride + j] += MG_phi1[i * stride + j];
 			}
 		}
 	}

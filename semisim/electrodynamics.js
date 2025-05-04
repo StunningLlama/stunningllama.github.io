@@ -119,7 +119,7 @@ class Electrodynamics {
         this.p_heavy_doping_concentration = 2.5e20;
         this.dielectric_eps_r = 5.0;
         this.ferromagnet_mu_r = 5.0;
-        this.staticcharge_density = 1.0;
+        this.staticcharge_density = 10.0;
         this.E_sat = 5e5;
         this.junction_size = 3;
         this.voltageprobes = [];
@@ -131,6 +131,7 @@ class Electrodynamics {
         this.dt = 0;
         this.depth = 1e-3;
         this.default_resolution = 256; //Must be a power of 2
+        this.WASM_array_padding = 1;
         this.nx = 0;
         this.ny = 0;
         this.absorber_width = 0;
@@ -565,7 +566,7 @@ class Electrodynamics {
         this.stepnumber++;
 
         Module._iterateSimulation(
-            this.nx, this.ny, this.dt, this.ds,
+            this.nx, this.ny, this.ny + 1, this.dt, this.ds,
             this.Hz_dissipation,
             this.absorbing_coeff,
             this.mu_electron,
@@ -625,7 +626,7 @@ class Electrodynamics {
     }
 
     multigridSolve(computeE, computePhi) {
-        Module._multigridSolve(this.nx, this.ny, this.log2_resolution, computeE, computePhi,
+        Module._multigridSolve(this.nx, this.ny, this.ny+this.WASM_array_padding, this.log2_resolution, computeE, computePhi,
             this.ptr_MG_phi1,
             this.ptr_MG_phi2,
             this.ptr_MG_rho,
@@ -685,7 +686,7 @@ class Electrodynamics {
                 for (let i = 0; i < iterationmultiplier; i++) {
                     this.iterateSimulation();
                 }
-                this.readFieldsFromWASM();
+                this.downloadDataFromWasmHeap();
 
                 if (this.frame % 2 === 0) {
                     this.calcMiscFields(true);
@@ -765,7 +766,7 @@ class Electrodynamics {
         this.ptr_phi = this.allocateHeapArray(this.nx, this.ny);
     }
 
-    writeFieldsToWASM() {
+    uploadDataToWasmHeap() {
         this.copy2DArrayToWasmHeap(this.Hz, this.nx, this.ny, this.ptr_Hz);
         this.copy2DArrayToWasmHeap(this.Hz_laplacian, this.nx, this.ny, this.ptr_Hz_laplacian);
         this.copy2DArrayToWasmHeap(this.Ex, this.nx, this.ny, this.ptr_Ex);
@@ -810,7 +811,7 @@ class Electrodynamics {
         this.copy2DArrayToWasmHeap(this.phi, this.nx, this.ny, this.ptr_phi);
     }
 
-    readFieldsFromWASM() {
+    downloadDataFromWasmHeap() {
         this.copyWasmHeapTo2DArray(this.ptr_Hz, this.nx, this.ny, this.Hz);
         this.copyWasmHeapTo2DArray(this.ptr_Ex, this.nx, this.ny, this.Ex);
         this.copyWasmHeapTo2DArray(this.ptr_Ey, this.nx, this.ny, this.Ey);
@@ -830,21 +831,23 @@ class Electrodynamics {
 
     allocateHeapArray(nx, ny, type = Float64Array) {
         const bytesPerElement = type.BYTES_PER_ELEMENT;
-        const ptr = Module._malloc(nx * ny * bytesPerElement);
+        const ptr = Module._malloc((nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) * bytesPerElement);
+        //const ptr = Module._aligned_alloc(64, nx * ny * bytesPerElement)
         return ptr;
     }
 
     allocate3DHeapArray(nx, ny, type = Float64Array) {
         const bytesPerElement = type.BYTES_PER_ELEMENT;
-        const ptr = Module._malloc((this.log2_resolution+1) * nx * ny * bytesPerElement);
+        const ptr = Module._malloc((this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) * bytesPerElement);
+        //const ptr = Module._aligned_alloc(64, (this.log2_resolution+1) * nx * ny * bytesPerElement);
         return ptr;
     }
 
     copy2DArrayToWasmHeap(js2DArray, nx, ny, ptr, type = Float64Array) {
-        const flatArray = new type(nx * ny);
+        const flatArray = new type((nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
         for (let i = 0; i < nx; i++) {
             for (let j = 0; j < ny; j++) {
-                flatArray[i * ny + j] = js2DArray[i][j];
+                flatArray[i * (ny+this.WASM_array_padding) + j] = js2DArray[i][j];
             }
         }
 
@@ -870,21 +873,21 @@ class Electrodynamics {
                     (type === Uint8Array) ? Module.HEAPU8 :
                         (() => { throw new Error("Unsupported type"); })();
 
-        const flat = new type(heap.buffer, ptr, nx * ny);
+        const flat = new type(heap.buffer, ptr, (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
 
         for (let i = 0; i < nx; i++) {
             for (let j = 0; j < ny; j++) {
-                result[i][j] = flat[i * ny + j];
+                result[i][j] = flat[i * (ny+this.WASM_array_padding) + j];
             }
         }
     }
 
     copy3DArrayToWasmHeap(js3DArray, nx, ny, ptr, type = Float64Array) {
-        const flatArray = new type((this.log2_resolution+1) * nx * ny);
+        const flatArray = new type((this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
         for (let k = 0; k < (this.log2_resolution+1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
-                    flatArray[k * nx * ny + i * ny + j] = js3DArray[k][i][j];
+                    flatArray[k * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) + i * (ny+this.WASM_array_padding) + j] = js3DArray[k][i][j];
                 }
             }
         }
@@ -911,12 +914,12 @@ class Electrodynamics {
                     (type === Uint8Array) ? Module.HEAPU8 :
                         (() => { throw new Error("Unsupported type"); })();
 
-        const flat = new type(heap.buffer, ptr, (this.log2_resolution+1) * nx * ny);
+        const flat = new type(heap.buffer, ptr, (this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
 
         for (let k = 0; k < (this.log2_resolution+1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
-                    result[i][j] = flat[k * nx * ny + i * ny + j];
+                    result[i][j] = flat[k * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) + i * (ny+this.WASM_array_padding) + j];
                 }
             }
         }
@@ -1047,7 +1050,7 @@ class Electrodynamics {
         this.image_r = this.create2DArray(this.nx, this.ny, Float32Array);
         this.image_g = this.create2DArray(this.nx, this.ny, Float32Array);
         this.image_b = this.create2DArray(this.nx, this.ny, Float32Array);
-        this.scalefactor = Math.floor(768.0 / this.ny);
+        this.scalefactor = Math.floor(768 / this.ny);
         this.imgwidth = Math.floor(this.scalefactor * this.nx);
         this.imgheight = Math.floor(this.scalefactor * this.ny);
 
@@ -1143,7 +1146,7 @@ class Electrodynamics {
         }
 
         this.prescaleDielectric();
-        this.writeFieldsToWASM();
+        this.uploadDataToWasmHeap();
     }
 
     updateJustEMFs() {
@@ -1164,7 +1167,7 @@ class Electrodynamics {
                 );
             }
         }
-        this.writeFieldsToWASM();
+        this.uploadDataToWasmHeap();
     }
 
     computeFreeEnergy(i, j, ni, W, B) {
@@ -2379,19 +2382,24 @@ class Electrodynamics {
         const imageData = this.ctx.createImageData(scansize, this.ny * this.scalefactor);
         const data = imageData.data;
 
-        for (let x = 0; x < this.nx * this.scalefactor; x++) {
-            for (let y = 0; y < this.ny * this.scalefactor; y++) {
-                const i = Math.floor(x / this.scalefactor);
-                const j = Math.floor(y / this.scalefactor);
+        for (let j = 0; j < this.ny; j++) {
+            for (let i = 0; i < this.nx; i++) {
                 const scale = 1.0 / Math.max(this.image_r[i][j], this.image_g[i][j], this.image_b[i][j], 1.0);
                 const r = this.clamp(Math.floor(256 * this.image_r[i][j] * scale), 0, 255);
                 const g = this.clamp(Math.floor(256 * this.image_g[i][j] * scale), 0, 255);
                 const b = this.clamp(Math.floor(256 * this.image_b[i][j] * scale), 0, 255);
-                const idx = (x + y * scansize) * 4;
-                data[idx] = r;
-                data[idx + 1] = g;
-                data[idx + 2] = b;
-                data[idx + 3] = 255; // Full opacity
+    
+                for (let dy = 0; dy < this.scalefactor; dy++) {
+                    for (let dx = 0; dx < this.scalefactor; dx++) {
+                        const x = i * this.scalefactor + dx;
+                        const y = j * this.scalefactor + dy;
+                        const idx = (x + y * scansize) * 4;
+                        data[idx] = r;
+                        data[idx + 1] = g;
+                        data[idx + 2] = b;
+                        data[idx + 3] = 255;
+                    }
+                }
             }
         }
 
@@ -3304,6 +3312,16 @@ class Electrodynamics {
     }
 
     async readFile(url = null) {
+        const loadingDialog = document.createElement('div');
+        loadingDialog.style.position = 'fixed';
+        loadingDialog.style.top = '50%';
+        loadingDialog.style.left = '50%';
+        loadingDialog.style.transform = 'translate(-50%, -50%)';
+        loadingDialog.style.background = 'white';
+        loadingDialog.style.padding = '20px';
+        loadingDialog.style.border = '1px solid black';
+        loadingDialog.textContent = 'Loading file, please wait...';
+
         try {
             // Create file input element
             let arrayBuffer = null;
@@ -3328,15 +3346,6 @@ class Electrodynamics {
             }
 
             // Show loading dialog
-            const loadingDialog = document.createElement('div');
-            loadingDialog.style.position = 'fixed';
-            loadingDialog.style.top = '50%';
-            loadingDialog.style.left = '50%';
-            loadingDialog.style.transform = 'translate(-50%, -50%)';
-            loadingDialog.style.background = 'white';
-            loadingDialog.style.padding = '20px';
-            loadingDialog.style.border = '1px solid black';
-            loadingDialog.textContent = 'Loading file, please wait...';
             document.body.appendChild(loadingDialog);
 
             if (url == null)
@@ -3511,6 +3520,8 @@ class Electrodynamics {
         } catch (error) {
             console.error('Error loading file:', error);
             alert('Error: Unable to load file.');
+            document.body.removeChild(loadingDialog);
+
             return false;
         }
     }
@@ -3534,6 +3545,17 @@ class Electrodynamics {
     }
 
     async writeFile() {
+        // Show saving dialog
+        const savingDialog = document.createElement('div');
+        savingDialog.style.position = 'fixed';
+        savingDialog.style.top = '50%';
+        savingDialog.style.left = '50%';
+        savingDialog.style.transform = 'translate(-50%, -50%)';
+        savingDialog.style.background = 'white';
+        savingDialog.style.padding = '20px';
+        savingDialog.style.border = '1px solid black';
+        savingDialog.textContent = 'Saving file, please wait...';
+        
         try {
             // Prompt for filename
             let filename = prompt('Enter filename to save:', `simulation${this.fileextension}`);
@@ -3552,16 +3574,6 @@ class Electrodynamics {
             }
             this.outfile = { name: filename };
 
-            // Show saving dialog
-            const savingDialog = document.createElement('div');
-            savingDialog.style.position = 'fixed';
-            savingDialog.style.top = '50%';
-            savingDialog.style.left = '50%';
-            savingDialog.style.transform = 'translate(-50%, -50%)';
-            savingDialog.style.background = 'white';
-            savingDialog.style.padding = '20px';
-            savingDialog.style.border = '1px solid black';
-            savingDialog.textContent = 'Saving file, please wait...';
             document.body.appendChild(savingDialog);
 
             // Prepare data
@@ -3626,6 +3638,7 @@ class Electrodynamics {
         } catch (error) {
             console.error('Error saving file:', error);
             alert('Error: Unable to save file.');
+            document.body.removeChild(savingDialog);
             return false;
         }
     }
