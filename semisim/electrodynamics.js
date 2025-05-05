@@ -227,7 +227,7 @@ class Electrodynamics {
         this.t7 = new Timer('Poisson potential solver');
         this.t8 = new Timer('Calc misc fields');
         this.t9 = new Timer('Debug');
-    
+
         // Initialize variables
         this.prev_EMF_setting = 50;
         this.prev_boundary = BoundaryCondition.DISSIPATIVE;
@@ -626,7 +626,7 @@ class Electrodynamics {
     }
 
     multigridSolve(computeE, computePhi) {
-        Module._multigridSolve(this.nx, this.ny, this.ny+this.WASM_array_padding, this.log2_resolution, computeE, computePhi,
+        Module._multigridSolve(this.nx, this.ny, this.ny + this.WASM_array_padding, this.log2_resolution, computeE, computePhi,
             this.ptr_MG_phi1,
             this.ptr_MG_phi2,
             this.ptr_MG_rho,
@@ -831,23 +831,23 @@ class Electrodynamics {
 
     allocateHeapArray(nx, ny, type = Float64Array) {
         const bytesPerElement = type.BYTES_PER_ELEMENT;
-        const ptr = Module._malloc((nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) * bytesPerElement);
+        const ptr = Module._malloc((nx + this.WASM_array_padding) * (ny + this.WASM_array_padding) * bytesPerElement);
         //const ptr = Module._aligned_alloc(64, nx * ny * bytesPerElement)
         return ptr;
     }
 
     allocate3DHeapArray(nx, ny, type = Float64Array) {
         const bytesPerElement = type.BYTES_PER_ELEMENT;
-        const ptr = Module._malloc((this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) * bytesPerElement);
+        const ptr = Module._malloc((this.log2_resolution + 1) * (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding) * bytesPerElement);
         //const ptr = Module._aligned_alloc(64, (this.log2_resolution+1) * nx * ny * bytesPerElement);
         return ptr;
     }
 
     copy2DArrayToWasmHeap(js2DArray, nx, ny, ptr, type = Float64Array) {
-        const flatArray = new type((nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
+        const flatArray = new type((nx + this.WASM_array_padding) * (ny + this.WASM_array_padding));
         for (let i = 0; i < nx; i++) {
             for (let j = 0; j < ny; j++) {
-                flatArray[i * (ny+this.WASM_array_padding) + j] = js2DArray[i][j];
+                flatArray[i * (ny + this.WASM_array_padding) + j] = js2DArray[i][j];
             }
         }
 
@@ -873,21 +873,21 @@ class Electrodynamics {
                     (type === Uint8Array) ? Module.HEAPU8 :
                         (() => { throw new Error("Unsupported type"); })();
 
-        const flat = new type(heap.buffer, ptr, (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
+        const flat = new type(heap.buffer, ptr, (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding));
 
         for (let i = 0; i < nx; i++) {
             for (let j = 0; j < ny; j++) {
-                result[i][j] = flat[i * (ny+this.WASM_array_padding) + j];
+                result[i][j] = flat[i * (ny + this.WASM_array_padding) + j];
             }
         }
     }
 
     copy3DArrayToWasmHeap(js3DArray, nx, ny, ptr, type = Float64Array) {
-        const flatArray = new type((this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
-        for (let k = 0; k < (this.log2_resolution+1); k++) {
+        const flatArray = new type((this.log2_resolution + 1) * (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding));
+        for (let k = 0; k < (this.log2_resolution + 1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
-                    flatArray[k * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) + i * (ny+this.WASM_array_padding) + j] = js3DArray[k][i][j];
+                    flatArray[k * (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding) + i * (ny + this.WASM_array_padding) + j] = js3DArray[k][i][j];
                 }
             }
         }
@@ -914,12 +914,12 @@ class Electrodynamics {
                     (type === Uint8Array) ? Module.HEAPU8 :
                         (() => { throw new Error("Unsupported type"); })();
 
-        const flat = new type(heap.buffer, ptr, (this.log2_resolution+1) * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding));
+        const flat = new type(heap.buffer, ptr, (this.log2_resolution + 1) * (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding));
 
-        for (let k = 0; k < (this.log2_resolution+1); k++) {
+        for (let k = 0; k < (this.log2_resolution + 1); k++) {
             for (let i = 0; i < nx; i++) {
                 for (let j = 0; j < ny; j++) {
-                    result[i][j] = flat[k * (nx+this.WASM_array_padding) * (ny+this.WASM_array_padding) + i * (ny+this.WASM_array_padding) + j];
+                    result[i][j] = flat[k * (nx + this.WASM_array_padding) * (ny + this.WASM_array_padding) + i * (ny + this.WASM_array_padding) + j];
                 }
             }
         }
@@ -1022,9 +1022,9 @@ class Electrodynamics {
         this.F = this.create2DArray(this.nx, this.ny);
         this.debug = this.create2DArray(this.nx, this.ny);
         this.MG_rho0 = this.create2DArray(this.nx, this.ny);
-        this.MG_rho = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
-        this.MG_epsx = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
-        this.MG_epsy = this.create3DArray(this.log2_resolution+1, this.nx, this.ny);
+        this.MG_rho = this.create3DArray(this.log2_resolution + 1, this.nx, this.ny);
+        this.MG_epsx = this.create3DArray(this.log2_resolution + 1, this.nx, this.ny);
+        this.MG_epsy = this.create3DArray(this.log2_resolution + 1, this.nx, this.ny);
         this.MG_eps_avg = this.create2DArray(this.nx, this.ny);
         this.MG_phi1 = this.create2DArray(this.nx, this.ny);
         this.MG_phi2 = this.create2DArray(this.nx, this.ny);
@@ -1079,13 +1079,13 @@ class Electrodynamics {
         for (let i = 0; i < this.nx; i++) {
             for (let j = 0; j < this.ny; j++) {
                 this.rho_back[i][j] = this.materials[i][j].rho_back;
-                this.conducting[i][j] = this.materials[i][j].conducting*this.materials[i][j].activated;
+                this.conducting[i][j] = this.materials[i][j].conducting * this.materials[i][j].activated;
             }
         }
 
         for (let i = 0; i < this.nx - 1; i++) {
             for (let j = 1; j < this.ny - 1; j++) {
-                this.conducting_x[i][j] = Math.min(this.materials[i + 1][j].conducting*this.materials[i + 1][j].activated, this.materials[i][j].conducting*this.materials[i][j].activated);
+                this.conducting_x[i][j] = Math.min(this.materials[i + 1][j].conducting * this.materials[i + 1][j].activated, this.materials[i][j].conducting * this.materials[i][j].activated);
                 this.emfx[i][j] = 0.5 * (
                     this.materials[i + 1][j].emf * Math.cos(this.materials[i + 1][j].emf_direction) * this.materials[i + 1][j].activated +
                     this.materials[i][j].emf * Math.cos(this.materials[i][j].emf_direction) * this.materials[i][j].activated
@@ -1097,7 +1097,7 @@ class Electrodynamics {
 
         for (let i = 1; i < this.nx - 1; i++) {
             for (let j = 0; j < this.ny - 1; j++) {
-                this.conducting_y[i][j] = Math.min(this.materials[i][j + 1].conducting*this.materials[i][j + 1].activated, this.materials[i][j].conducting*this.materials[i][j].activated);
+                this.conducting_y[i][j] = Math.min(this.materials[i][j + 1].conducting * this.materials[i][j + 1].activated, this.materials[i][j].conducting * this.materials[i][j].activated);
                 this.emfy[i][j] = 0.5 * (
                     this.materials[i][j + 1].emf * Math.sin(this.materials[i][j + 1].emf_direction) * this.materials[i][j + 1].activated +
                     this.materials[i][j].emf * Math.sin(this.materials[i][j].emf_direction) * this.materials[i][j].activated
@@ -1197,7 +1197,7 @@ class Electrodynamics {
         for (let i = i1 - max_distance; i <= i1 + max_distance; i++) {
             for (let j = j1 - max_distance; j <= j1 + max_distance; j++) {
                 if (i >= 0 && j >= 0 && i < this.nx && j < this.ny) {
-                    this.distance[i][j] = max_distance+1;
+                    this.distance[i][j] = max_distance + 1;
                     this.visited[i][j] = false;
                 }
             }
@@ -1205,7 +1205,7 @@ class Electrodynamics {
         this.distance[i1][j1] = 0;
 
         while (true) {
-            let smallest_length = max_distance+1;
+            let smallest_length = max_distance + 1;
             let smallest_i = 0;
             let smallest_j = 0;
             for (let i = i1 - max_distance; i <= i1 + max_distance; i++) {
@@ -1220,7 +1220,7 @@ class Electrodynamics {
                 }
             }
 
-            if (smallest_length === max_distance+1) break;
+            if (smallest_length === max_distance + 1) break;
 
             for (let di = -1; di <= 1; di++) {
                 for (let dj = -1; dj <= 1; dj++) {
@@ -1472,25 +1472,25 @@ class Electrodynamics {
         }
 
         if (Brush.isMaterialModifyingBrush(brush) && brush !== Brush.FILL) {
-			this.gui_brush_1.style.display = 'inline';
-			this.gui_brush_highlight.style.display = 'inline';
-			this.gui_brush_highlight_label.style.display = 'inline';
-			this.gui_brushsize.style.display = 'inline';
-			this.gui_lblBrushSize.style.display = 'inline';
-		} else {
-			this.gui_brush_1.style.display = 'none';
-			this.gui_brush_highlight.style.display = 'none';
-			this.gui_brush_highlight_label.style.display = 'none';
-			this.gui_brushsize.style.display = 'none';
-			this.gui_lblBrushSize.style.display = 'none';
-		}
-		
+            this.gui_brush_1.style.display = 'inline';
+            this.gui_brush_highlight.style.display = 'inline';
+            this.gui_brush_highlight_label.style.display = 'inline';
+            this.gui_brushsize.style.display = 'inline';
+            this.gui_lblBrushSize.style.display = 'inline';
+        } else {
+            this.gui_brush_1.style.display = 'none';
+            this.gui_brush_highlight.style.display = 'none';
+            this.gui_brush_highlight_label.style.display = 'none';
+            this.gui_brushsize.style.display = 'none';
+            this.gui_lblBrushSize.style.display = 'none';
+        }
 
-		if (Brush.isMaterialModifyingBrush(brush) && brush !== Brush.ERASE) {
-			this.gui_material.style.display = 'inline';
-		} else {
-			this.gui_material.style.display = 'none';
-		}
+
+        if (Brush.isMaterialModifyingBrush(brush) && brush !== Brush.ERASE) {
+            this.gui_material.style.display = 'inline';
+        } else {
+            this.gui_material.style.display = 'none';
+        }
 
         if (this.brush_changed) {
             if (!(brush === Brush.SELECT || brush === Brush.FLOODSELECT)) {
@@ -2237,14 +2237,14 @@ class Electrodynamics {
                 dest[steps][i][j] = source[i][j];
             }
         }
-    
+
         let nx_d = nx;
         let ny_d = ny;
-    
+
         for (let k = steps - 1; k >= 0; k--) {
             nx_d = Math.floor(nx_d / 2);
             ny_d = Math.floor(ny_d / 2);
-    
+
             for (let i = 0; i < nx_d - 1; i++) {
                 for (let j = 0; j < ny_d; j++) {
                     dest[k][i][j] = 0.125 * (
@@ -2256,7 +2256,7 @@ class Electrodynamics {
             }
         }
     }
-    
+
     downscale_y_vector(source, dest, steps, nx, ny) {
         // Copy initial data
         for (let i = 0; i < nx; i++) {
@@ -2264,14 +2264,14 @@ class Electrodynamics {
                 dest[steps][i][j] = source[i][j];
             }
         }
-    
+
         let nx_d = nx;
         let ny_d = ny;
-    
+
         for (let k = steps - 1; k >= 0; k--) {
             nx_d = Math.floor(nx_d / 2);
             ny_d = Math.floor(ny_d / 2);
-    
+
             for (let i = 0; i < nx_d; i++) {
                 for (let j = 0; j < ny_d - 1; j++) {
                     dest[k][i][j] = 0.125 * (
@@ -2388,7 +2388,7 @@ class Electrodynamics {
                 const r = this.clamp(Math.floor(256 * this.image_r[i][j] * scale), 0, 255);
                 const g = this.clamp(Math.floor(256 * this.image_g[i][j] * scale), 0, 255);
                 const b = this.clamp(Math.floor(256 * this.image_b[i][j] * scale), 0, 255);
-    
+
                 for (let dy = 0; dy < this.scalefactor; dy++) {
                     for (let dx = 0; dx < this.scalefactor; dx++) {
                         const x = i * this.scalefactor + dx;
@@ -3108,20 +3108,22 @@ class Electrodynamics {
             ); line++;
         }
         if (this.debugging) {
-            const total = window.performance.memory.totalJSHeapSize;
-            const used = window.performance.memory.usedJSHeapSize;
-            this.drawStringWithBackground(
-                `Used memory ${this.getSI(used, 'B')}`,
-                hoffset,
-                voffset + line * vspacing,
-                this.ctx
-            ); line++;
-            this.drawStringWithBackground(
-                `Total memory ${this.getSI(total, 'B')}`,
-                hoffset,
-                voffset + line * vspacing,
-                this.ctx
-            ); line++;
+            if (window.performance.memory != null) {
+                const total = window.performance.memory.totalJSHeapSize;
+                const used = window.performance.memory.usedJSHeapSize;
+                this.drawStringWithBackground(
+                    `Used memory ${this.getSI(used, 'B')}`,
+                    hoffset,
+                    voffset + line * vspacing,
+                    this.ctx
+                ); line++;
+                this.drawStringWithBackground(
+                    `Total memory ${this.getSI(total, 'B')}`,
+                    hoffset,
+                    voffset + line * vspacing,
+                    this.ctx
+                ); line++;
+            }
             this.drawStringWithBackground(
                 `${this.t4.name} ${this.getSI(this.t4.time, 's')}`,
                 hoffset,
@@ -3330,7 +3332,7 @@ class Electrodynamics {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = this.fileextension;
-    
+
                 // Simulate file chooser dialog
                 const filePromise = new Promise((resolve) => {
                     input.addEventListener('change', () => {
@@ -3338,7 +3340,7 @@ class Electrodynamics {
                     });
                     input.click();
                 });
-    
+
                 this.infile = await filePromise;
                 if (!this.infile) {
                     return false;
@@ -3348,8 +3350,7 @@ class Electrodynamics {
             // Show loading dialog
             document.body.appendChild(loadingDialog);
 
-            if (url == null)
-            {
+            if (url == null) {
                 arrayBuffer = await this.infile.arrayBuffer();
             } else {
                 const response = await fetch(url);
@@ -3555,7 +3556,7 @@ class Electrodynamics {
         savingDialog.style.padding = '20px';
         savingDialog.style.border = '1px solid black';
         savingDialog.textContent = 'Saving file, please wait...';
-        
+
         try {
             // Prompt for filename
             let filename = prompt('Enter filename to save:', `simulation${this.fileextension}`);
