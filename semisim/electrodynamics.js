@@ -2803,7 +2803,7 @@ class Electrodynamics {
             this.setalphaBG(1.0);
 
             const arrowlength = 10.0 / this.scalefactor;
-            const vectorscalingconstant = 0.01 * Math.pow(10.0, parseInt(this.gui_brightness_vec.value) / 5.0);
+            const vectorscalingconstant = 0.01 * Math.pow(10.0, (parseInt(this.gui_brightness_vec.value) + 5) / 5.0);
             const vector_display_mode = Object.values(VectorMode).find(vm => vm.name === this.gui_view_vec_mode.value) || VectorMode.ARROWS;
 
             this.rand.setSeed(4);
