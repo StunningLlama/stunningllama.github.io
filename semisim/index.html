@@ -1,81 +1,95 @@
 <html>
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Semiconductor simulator</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background: #f9f9f9;
-      }
-  
-      h1, h2 {
-        color: #2c3e50;
-      }
-  
-      .section {
-        margin-bottom: 40px;
-      }
-  
-      .example-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, 300px);
-        gap: 20px;
-      }
-  
-      .card {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        overflow: hidden;
-        text-align: center;
-        transition: transform 0.2s;
-      }
-  
-      .card:hover {
-        transform: scale(1.02);
-      }
-  
-      .card img {
-        width: 100%;
-        height: 140px;
-        object-fit: contain;
-        background: #000;
-      }
-  
-      .card a {
-        display: block;
-        padding: 10px;
-        text-decoration: none;
-        color: #2980b9;
-        font-weight: bold;
-      }
-    </style>
-  </head><body>
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semiconductor simulator</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .container {
+      font-family: Arial, sans-serif;
+      margin: 28px;
+      background: #f9f9f9;
+    }
+
+    h1,
+    h2 {
+      color: #2c3e50;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, 300px);
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .card a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+  </style>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="menu-bar">
+    <a href="..">Home</a>
+  </div>
+  <div class="container">
     <h1>Brandon's Semiconductor Simulator</h1>
     <p>Draw your own circuits. Turn on voltage and see what happens. Some features of my program include:</p>
     <ul>
-        <li>Interactive circuit drawing</li>
-        <li>Visualization of electromagnetic fields</li>
-        <li>Many materials (metals, semiconductors, dielectrics, and more)</li>
+      <li>Interactive circuit drawing</li>
+      <li>Visualization of electromagnetic fields</li>
+      <li>Many materials (metals, semiconductors, dielectrics, and more)</li>
     </ul>
-    
+
     <div class="example-grid">
-        <div class="card">
-            <img src="images/simulator.png" alt="Simulator">
-            <a href="simulation.html" style="color:black;">Run Simulator</a>
-        </div>
+      <div class="card">
+        <img src="images/simulator.png" alt="Simulator">
+        <a href="simulation.html" style="color:black;">Run Simulator</a>
+      </div>
     </div>
 
-    <p>You need a good computer to run this simulation on your browser. There is also a <a href="https://github.com/StunningLlama/Physics/releases/tag/v1.2">downloadable version</a> that's much faster (but requires Java).</p>
+    <p>You need a good computer to run this simulation on your browser. There is also a <a
+        href="https://github.com/StunningLlama/Physics/releases/tag/v1.2">downloadable version</a> that's much faster
+      (but requires Java).</p>
     <p>Want to know more? You can read about it <a href="info.html">here.</a></p>
     <p>(c) Brandon Li, 2025. Ported to Javascript with the help of Paul Falstad.</p>
 
     <h1>Simulation Examples</h1>
-  
+
     <div class="section">
       <h2>Simple Circuits</h2>
       <div class="example-grid">
@@ -101,7 +115,7 @@
         </div>
         <div class="card">
           <img src="images/resonator.png" alt="LC Circuit">
-          <a href="simulation.html?file=examples/Simple circuits/resonator.semisim">Resonant Circuit</a>
+          <a href="simulation.html?file=examples/Simple circuits/resonator.semisim">LC Circuit</a>
         </div>
         <div class="card">
           <img src="images/maze.png" alt="Maze">
@@ -117,7 +131,7 @@
         </div>
       </div>
     </div>
-  
+
     <div class="section">
       <h2>Semiconductor Devices</h2>
       <div class="example-grid">
@@ -159,13 +173,14 @@
         </div>
       </div>
     </div>
-  
+
     <div class="section">
       <h2>Digital Logic</h2>
       <div class="example-grid">
         <div class="card">
           <img src="images/ring-oscillator.png" alt="Ring Oscillator">
-          <a href="simulation.html?file=examples/Digital logic/nMOS ring oscillator.semisim">Ring Oscillator (very slow)</a>
+          <a href="simulation.html?file=examples/Digital logic/nMOS ring oscillator.semisim">Ring Oscillator (very
+            slow)</a>
         </div>
         <div class="card">
           <img src="images/dram.png" alt="DRAM Cell">
@@ -173,8 +188,8 @@
         </div>
       </div>
     </div>
-  
-  </body>
 
+</body>
+</div>
 
 </html>
