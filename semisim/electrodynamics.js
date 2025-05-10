@@ -117,8 +117,8 @@ class Electrodynamics {
         this.p_light_doping_concentration = 1e19;
         this.n_heavy_doping_concentration = 2.5e20;
         this.p_heavy_doping_concentration = 2.5e20;
-        this.dielectric_eps_r = 5.0;
-        this.ferromagnet_mu_r = 5.0;
+        this.dielectric_eps_r = 25.0;
+        this.ferromagnet_mu_r = 25.0;
         this.staticcharge_density = 10.0;
         this.E_sat = 5e5;
         this.junction_size = 3;
@@ -3505,7 +3505,6 @@ class Electrodynamics {
             this.textPane.readOnly = true;
             this.textPane.scrollTop = 0;
             this.constructBoundary();
-            this.initializeAllMaterials();
             this.updateAllMaterials();
             this.calcMiscFields(true);
 
