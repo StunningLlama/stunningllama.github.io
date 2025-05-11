@@ -118,7 +118,7 @@ class Electrodynamics {
         this.n_heavy_doping_concentration = 2.5e20;
         this.p_heavy_doping_concentration = 2.5e20;
         this.dielectric_eps_r = 25.0;
-        this.ferromagnet_mu_r = 25.0;
+        this.ferromagnet_mu_r = 250.0;
         this.staticcharge_density = 10.0;
         this.E_sat = 5e5;
         this.junction_size = 3;
