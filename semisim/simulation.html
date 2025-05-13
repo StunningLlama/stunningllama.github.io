@@ -15,6 +15,8 @@
         #container {
             margin: 5px;
             display: flex;
+            font-family: sans-serif;
+            font-size: 13px;
         }
 
         #canvas {
@@ -60,7 +62,7 @@
         input[type="checkbox"] {
             width: auto;
         }
-
+        
         label {
             display: block;
             font-size: 13px;
@@ -172,11 +174,11 @@
         <canvas id="canvas" width="1000" height="1000" tabindex="0" style="cursor: default; image-rendering: pixelated;"></canvas>
         <div id="panel">
             <input type="checkbox" id="gui_paused" style="left: 10px; top: 11px;">
-            <label for="gui_paused" style="left: 30px; top: 11px;">Paused</label>
+            <label for="gui_paused" style="left: 32px; top: 13px;">Paused</label>
             <input type="checkbox" id="gui_tooltip" checked="" style="left: 10px; top: 40px;">
-            <label for="gui_tooltip" style="left: 30px; top: 40px;">Show simulation info</label>
+            <label for="gui_tooltip" style="left: 32px; top: 42px;">Show simulation info</label>
             <input type="checkbox" id="gui_text_bg" checked="" style="left: 10px; top: 68px;">
-            <label for="gui_text_bg" style="left: 30px; top: 68px;">Show text background</label>
+            <label for="gui_text_bg" style="left: 32px; top: 70px;">Show text background</label>
             <select id="gui_bc" style="left: 10px; top: 99px; width: 171px; height: 22px;">
                 <option value="Absorbing boundary">Absorbing boundary</option>
                 <option value="Conducting boundary">Conducting boundary</option>
@@ -220,11 +222,11 @@
                 <option value="Show lines">Show lines</option>
             </select>
             <input type="checkbox" id="gui_elem_colors" checked="" style="left: 10px; top: 253px;">
-            <label for="gui_elem_colors" style="left: 30px; top: 253px;">Show material colors</label>
-            <label id="step-size-label" style="left: 20px; top: 296px;">Step size: 0.11 fs</label>
-            <label id="steps-frame-label" style="left: 20px; top: 349px;">Steps/frame: 10</label>
-            <label id="scalar-brightness-label" style="left: 20px; top: 402px;">Scalar Brightness</label>
-            <label id="vector-brightness-label" style="left: 20px; top: 459px;">Vector field brightness</label>
+            <label for="gui_elem_colors" style="left: 32px; top: 255px;">Show material colors</label>
+            <label id="step-size-label" style="left: 20px; top: 302px;">Step size: 0.11 fs</label>
+            <label id="steps-frame-label" style="left: 20px; top: 355px;">Steps/frame: 10</label>
+            <label id="scalar-brightness-label" style="left: 20px; top: 408px;">Scalar Brightness</label>
+            <label id="vector-brightness-label" style="left: 20px; top: 465px;">Vector field brightness</label>
             <input type="range" id="gui_simspeed" min="0" max="20" value="20" style="left: 10px; top: 321px;">
             <input type="range" id="gui_simspeed_2" min="1" max="25" value="10" style="left: 10px; top: 374px;">
             <input type="range" id="gui_brightness" min="-25" max="25" value="-10" style="left: 10px; top: 427px;">
@@ -255,10 +257,10 @@
                 <option value="Square brush">Square brush</option>
             </select>
             <input type="checkbox" id="gui_brush_highlight" checked="" style="left: 205px; top: 253px;">
-            <label for="gui_brush_highlight" id="gui_brush_highlight_label" style="left: 225px; top: 253px;">Brush highlight</label>
-            <label id="brush-size-label" style="left: 211px; top: 296px;">Brush size: 8</label>
-            <label id="direction-label" style="left: 211px; top: 406px; display: none;"></label>
-            <label id="gui_parameter3_text" style="left: 211px; top: 459px; display: none;"></label>
+            <label for="gui_brush_highlight" id="gui_brush_highlight_label" style="left: 227px; top: 255px;">Brush highlight</label>
+            <label id="brush-size-label" style="left: 211px; top: 302px;">Brush size: 8</label>
+            <label id="direction-label" style="left: 211px; top: 408px; display: none;"></label>
+            <label id="gui_parameter3_text" style="left: 211px; top: 465px; display: none;"></label>
             <input type="range" id="gui_brushsize" min="0" max="1000" value="500" style="left: 201px; top: 321px;">
             <input type="range" id="gui_parameter2" min="0" max="18" value="0"
                 style="left: 201px; top: 427px; display: none;">
@@ -267,20 +269,16 @@
             <div id="scrollPane" style="left: 17px; top: 521px; height: 200px;">
                 <textarea id="textPane" style="width: 335px; height: 180px;" readonly="">Description of simulation scenario</textarea>
             </div>
-            <button id="gui_help" style="left: 19px; top: 729px; width: 162px;">Help/About</button>
+            <button id="gui_help" style="left: 19px; top: 729px; width: 162px;">Help</button>
             <button id="gui_editdesc" style="left: 196px; top: 729px; width: 165px;">Edit description</button>
         </div>
     </div>
     <div id="help" style="overflow-y:auto">
         <div id="gui_close_help" style="cursor: pointer; color: #1e92ff; text-align: right">[x]</div>
 
-        <h1>Semiconductor Simulation Program</h1>
-
-        <p>
-            This program demonstrates the behavior of semiconductor devices.
-            Click <a href="SemiSim.html">here</a> to load one of the demonstrations and use the mouse to interact.
-        </p>
-
+        <h1>Simulation details</h1>
+        The main way to interact with circuits is to change the strength of voltage sources and turn switches on and off. The quickest way to get started is to load one of the examples,
+        uncheck the pause button and click on one of the voltage sources. You can then adjust the voltage using a slider located on the right panel.
         <h2>Tools</h2>
         <ul>
             <li><strong>Interact:</strong> Click on a voltage source to set its strength.</li>
@@ -298,10 +296,10 @@
             <li><strong>Select region:</strong> Click to select a contiguous region.</li>
             <li><strong>Text:</strong> Click to place a text cursor and type text on the screen.</li>
         </ul>
-
+        
         <h2>Controls</h2>
         <ul>
-            <li><strong>P/Space:</strong> Pause & unpause</li>
+            <li><strong>P/Space:</strong> Pause &amp; unpause</li>
             <li><strong>F:</strong> Advance frame</li>
             <li><strong>Q:</strong> Change brush shape</li>
             <li><strong>C:</strong> Toggle material color</li>
@@ -320,28 +318,46 @@
             <li><strong>Right mouse:</strong> Erase material</li>
             <li><strong>Middle mouse:</strong> Pick material</li>
         </ul>
-
+        
         <h2>Materials</h2>
         <ul>
             <li><strong>Voltage source:</strong> Generates a voltage that can be used to power circuits.</li>
-            <li><strong>Metal:</strong> Conducts electricity very well.</li>
-            <li><strong>Conductive metal:</strong> More conductive than normal metal.</li>
-            <li><strong>Resistive metal:</strong> Less conductive than normal metal.</li>
-            <li><strong>High workfunction metal:</strong> Forms an ohmic contact with p-type semiconductor.</li>
-            <li><strong>Low workfunction metal:</strong> Forms an ohmic contact with n-type semiconductor.</li>
-            <li><strong>Intrinsic semiconductor:</strong> Undoped, has equal number of electrons and holes.</li>
-            <li><strong>P-type semiconductor:</strong> Has more holes than electrons.</li>
-            <li><strong>N-type semiconductor:</strong> Has more electrons than holes.</li>
-            <li><strong>Heavily doped P-type semiconductor:</strong> Has many more holes than electrons.</li>
-            <li><strong>Heavily doped N-type semiconductor:</strong> Has many more electrons than holes.</li>
-            <li><strong>Lightly doped P-type semiconductor:</strong> Has slightly more holes than electrons.</li>
-            <li><strong>Lightly doped N-type semiconductor:</strong> Has slightly more electrons than holes.</li>
-            <li><strong>Dielectric:</strong> Has high relative permittivity, can be used for capacitors.</li>
-            <li><strong>Ferromagnet:</strong> Has high relative permeability, can be used for inductors.</li>
-            <li><strong>Decoration:</strong> Inert, can be used for text or circuit symbols.</li>
+            <li><strong>Switch:</strong> Conductivity can be switched on and off by the user.</li>
+            <li><strong>Metal:</strong> Material that conducts electricity very well.</li>
+            <li><strong>Conductive metal:</strong> More conductive than regular metal.</li>
+            <li><strong>Resistive metal:</strong> Less conductive than regular metal.</li>
+            <li><strong>High workfunction metal:</strong> Metal that forms an ohmic contact with p-type semiconductor.</li>
+            <li><strong>Low workfunction metal:</strong> Metal that forms an ohmic contact with n-type semiconductor.</li>
+            <li><strong>Intrinsic semiconductor:</strong> Undoped, with equal number of electrons and holes.</li>
+            <li><strong>P-type semiconductor:</strong> Represents a semiconductor doped with holes.</li>
+            <li><strong>N-type semiconductor:</strong> Represents a semiconductor doped with electrons.</li>
+            <li><strong>Heavily doped P-type semiconductor:</strong> Has a large concentration of holes.</li>
+            <li><strong>Heavily doped N-type semiconductor:</strong> Has a large concentration of electrons.</li>
+            <li><strong>Lightly doped P-type semiconductor:</strong> Has a small concentration of holes.</li>
+            <li><strong>Lightly doped N-type semiconductor:</strong> Has a small concentration of electrons.</li>
+            <li><strong>Dielectric:</strong> Material with a large permittivity/dielectric constant.</li>
+            <li><strong>Ferromagnet:</strong> Magnetic material with high relative permeability.</li>
+            <li><strong>Positive static charge:</strong> Positively charged insulating material.</li>
+            <li><strong>Negative static charge:</strong> Negatively charged insulating material.</li>
+            <li><strong>Decoration:</strong> Used for text or circuit symbols, has no effect otherwise.</li>
             <li><strong>Vacuum:</strong> Empty space.</li>
         </ul>
-
+        
+        <h2>What do the colors mean?</h2>
+        In general, the color red is associated with either holes or a positive charge. Blue represents electrons or negative charge. White means both electrons and holes exist a location.
+        In the rest of the cases, yellow represents a positve quantity (eg. chemical potential or magnetic field), while cyan is negative. Finally, green is used for quantites that are always positive (eg. energy density).
+        Note: Each material also has its own color which is unrelated to the aforementioned color scheme.
+        
+        <h2>What do voltmeters actually measure?</h2>
+        You might notice that the reading from a voltage probe doesn't match the electric potential Φ. In reality, voltmeters do not measure Φ but rather differences in electrochemical potential of charge carriers.
+        Things get a bit trickier when we ask what the voltage is in a piece of semiconductor, becuase now there are multiple charge carriers! In this case we can try to define voltage as the reading we get when we stick a small metallic
+        probe at a certain point. This can actually be performed in the simulation, and the result is that the electrochemical potential of the metal lies between that of electrons and holes, closer to whichever one has a larger density.
+        I approximate this with a simple weighted average, the result of which is displayed on the voltage probe.
+        
+        <h2>Why does the magnetic field vanish outside of circuits?</h2>
+        Because the simulation is in 2D, circuits actually extend infinitely in the z-direction (out of the page), so current flowing through a closed circuit has the same effect as current flowing through a 3D solenoid.
+        If you recall from E&amp;M class, the magnetic field within an infinitely long solenoid is entirely contained within it. This is certainly a point of departure from how we expect circuits to behave. It means that each current loop has its own inductance,
+        and trying to create "inductors" that behave like their 3d counterparts is quite tricky.
         <p>
             Copyright (c) 2025 Brandon Li<br>
             <a href="mailto:brandonli.lex@gmail.com">brandonli.lex@gmail.com</a>

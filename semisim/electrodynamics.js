@@ -10,12 +10,15 @@ class Electrodynamics {
         this.Ey = null;
         this.Hz = null;
         this.Hz_laplacian = null;
+
         this.rho_n = null;
         this.rho_p = null;
         this.rho_back = null;
         this.rho_abs = null;
         this.rho_free = null;
+
         this.mobility_factor = null;
+
         this.Jx_n = null;
         this.Jy_n = null;
         this.Jx_p = null;
@@ -24,6 +27,7 @@ class Electrodynamics {
         this.Jy_abs = null;
         this.Jx_free = null;
         this.Jy_free = null;
+
         this.Dx = null;
         this.Dy = null;
         this.Bz = null;
@@ -34,6 +38,7 @@ class Electrodynamics {
         this.G = null;
         this.F_n = null;
         this.F_p = null;
+
         this.grad_E0x_n = null;
         this.grad_E0y_n = null;
         this.grad_E0x_p = null;
@@ -42,14 +47,18 @@ class Electrodynamics {
         this.grad_Fy_n = null;
         this.grad_Fx_p = null;
         this.grad_Fy_p = null;
+
         this.Q = null;
         this.S = null;
         this.F = null;
+
+
         this.updateMiscFields = false;
         this.debug = null;
         this.materials = null;
         this.selection = null;
         this.clipboard = null;
+
         this.F0_n = null;
         this.F0_p = null;
         this.E0_n = null;
@@ -66,12 +75,14 @@ class Electrodynamics {
         this.epsx = null;
         this.epsy = null;
         this.mu_z = null;
+
         this.conducting = null;
         this.conducting_x = null;
         this.conducting_y = null;
         this.absorptivity = null;
         this.absorptivity_x = null;
         this.absorptivity_y = null;
+
         this.MG_rho0 = null;
         this.MG_rho = null;
         this.MG_epsx = null;
@@ -79,8 +90,10 @@ class Electrodynamics {
         this.MG_eps_avg = null;
         this.MG_phi1 = null;
         this.MG_phi2 = null;
+
         this.distance = null;
         this.visited = null;
+
         this.eps0 = 8.85e-12;
         this.mu0 = 1.257e-6;
         this.c = 1 / Math.sqrt(this.eps0 * this.mu0);
@@ -120,11 +133,14 @@ class Electrodynamics {
         this.dielectric_eps_r = 25.0;
         this.ferromagnet_mu_r = 250.0;
         this.staticcharge_density = 10.0;
+
         this.E_sat = 5e5;
         this.junction_size = 3;
+
         this.voltageprobes = [];
         this.currentprobes = [];
         this.ground = null;
+
         this.default_width = 2.56e-5;
         this.width = 0;
         this.ds = 0;
@@ -139,7 +155,9 @@ class Electrodynamics {
         this.Hz_dissipation = 0;
         this.dt_maximum = 0;
         this.parity = -1;
+
         this.time = 0.0;
+
         this.stepnumber = 0;
         this.frame = 0;
         this.lastsimspeed = 0;
@@ -148,6 +166,7 @@ class Electrodynamics {
         this.r = null;
         this.opts = null;
         this.help = null;
+
         this.screen = null;
         this.image_r = null;
         this.image_g = null;
@@ -157,15 +176,15 @@ class Electrodynamics {
         this.col_b = 0;
         this.alphaBG = 0;
         this.alphaFG = 0;
+
         this.rand = Math.random;
-        this.bigfont = '15px sans-serif';
-        this.regularfont = '12px sans-serif';
+
         this.scalefactor = 0;
         this.imgwidth = 0;
         this.imgheight = 0;
         this.targetframerate = 60;
         this.frameduration = 1000 / this.targetframerate;
-        this.t5 = null;
+
         this.advanceframe = false;
         this.clear = false;
         this.reset = false;
@@ -186,7 +205,9 @@ class Electrodynamics {
         this.moving_selection = false;
         this.dragging_selection = false;
         this.brush_changed = false;
+
         this.mousebutton = 0;
+
         this.mx = 0;
         this.my = 0;
         this.mx_start = 0;
@@ -203,6 +224,7 @@ class Electrodynamics {
         this.my_start_realspace = 0;
         this.delta_mx_index = 0;
         this.delta_my_index = 0;
+
         this.EMF_selected = false;
         this.max_EMF = 5e5;
         this.prev_brush = Brush.DRAW;
@@ -261,7 +283,6 @@ class Electrodynamics {
         this.regularfont = '12px Arial';
         this.bigfont = '16px Arial';
         this.startingpath = '.';
-        this.fileextension = '.json.gz';
         this.infile = null;
         this.outfile = null;
         this.saveversion = 1;
@@ -391,21 +412,14 @@ class Electrodynamics {
         this.gui_view_vec_mode.addEventListener('change', this.actionPerformed.bind(this));
         this.gui_text_bg.addEventListener('change', this.actionPerformed.bind(this));
 
-        // Initialize grid
-        this.detect64Bit();
         this.initializeGrid(this.default_width, this.default_resolution);
 
         this.canvas.tabIndex = 0;
 
-        // Initialize Font7x5
         this.Font7x5 = new Font7x5();
 
         var initial_file = location.search.split('file=')[1];
         this.readFile(initial_file);
-    }
-
-    detect64Bit() {
-        console.warn('64-bit check skipped; JavaScript assumes 64-bit environment');
     }
 
     resetFields(resetall) {
@@ -649,11 +663,6 @@ class Electrodynamics {
             this.copyWasmHeapTo2DArray(this.ptr_Ex, this.nx, this.ny, this.Ex);
             this.copyWasmHeapTo2DArray(this.ptr_Ey, this.nx, this.ny, this.Ey);
         }
-    }
-
-    // Existing methods (unchanged, included for completeness)
-    detect64Bit() {
-        console.warn('64-bit check skipped; JavaScript assumes 64-bit environment');
     }
 
     run() {
@@ -3082,7 +3091,7 @@ class Electrodynamics {
 
         // Status text
         let vspacing = 13;
-        let voffset = 3;
+        let voffset = 1;
         let hoffset = 5;
         let line = 1;
         this.drawStringWithBackground(
@@ -3593,21 +3602,21 @@ class Electrodynamics {
                 gui_elem_colors: this.gui_elem_colors.checked,
                 gui_bc: this.gui_bc.selectedIndex,
                 description: this.textPane.value,
-                ex: this.Ex,
-                ey: this.Ey,
-                hz: this.Hz,
-                rho_c: this.rho_abs,
-                rho_n: this.rho_n,
-                rho_p: this.rho_p,
-                rho_back: this.rho_back,
-                rho_free: this.rho_free,
-                jx_c: this.Jx_abs,
-                jy_c: this.Jy_abs,
-                jx_n: this.Jx_n,
-                jy_n: this.Jy_n,
-                jx_p: this.Jx_p,
-                jy_p: this.Jy_p,
-                materials: this.materials,
+                ex: this.ArrayToJSON(this.Ex),
+                ey: this.ArrayToJSON(this.Ey),
+                hz: this.ArrayToJSON(this.Hz),
+                rho_c: this.ArrayToJSON(this.rho_abs),
+                rho_n: this.ArrayToJSON(this.rho_n),
+                rho_p: this.ArrayToJSON(this.rho_p),
+                rho_back: this.ArrayToJSON(this.rho_back),
+                rho_free: this.ArrayToJSON(this.rho_free),
+                jx_c: this.ArrayToJSON(this.Jx_abs),
+                jy_c: this.ArrayToJSON(this.Jy_abs),
+                jx_n: this.ArrayToJSON(this.Jx_n),
+                jy_n: this.ArrayToJSON(this.Jy_n),
+                jx_p: this.ArrayToJSON(this.Jx_p),
+                jy_p: this.ArrayToJSON(this.Jy_p),
+                materials: (this.MaterialArrayToJSON(this.materials)),
                 voltageprobes: this.voltageprobes,
                 currentprobes: this.currentprobes,
                 ground: this.ground
@@ -3616,12 +3625,8 @@ class Electrodynamics {
             // Serialize and compress
             const json = JSON.stringify(data);
             let blob;
-            if (this.fileextension === '.json.gz') {
-                const compressed = pako.gzip(json);
-                blob = new Blob([compressed], { type: 'application/gzip' });
-            } else {
-                blob = new Blob([json], { type: 'application/json' });
-            }
+            const compressed = pako.gzip(json);
+            blob = new Blob([compressed], { type: 'application/gzip' });
 
             // Trigger download
             const url = URL.createObjectURL(blob);
@@ -3641,6 +3646,25 @@ class Electrodynamics {
             document.body.removeChild(savingDialog);
             return false;
         }
+    }
+
+    ArrayToJSON(array2D) {
+        return array2D.map(row => Array.from(row));
+    }
+
+    MaterialArrayToJSON(array) {
+        var newarray = new Array(array.length);
+        console.log(array.length);
+        for (let i = 0; i < array.length; i++) {
+            newarray[i] = new Array(array[i].length);
+
+            console.log(array[i].length);
+            for (let j = 0; j < array[i].length; j++) {
+                newarray[i][j] = array[i][j].clone();
+                newarray[i][j].type = Object.keys(MaterialType).find(key => MaterialType[key] === newarray[i][j].type);
+            }
+        }
+        return newarray;
     }
 
     mouseClicked(event) {
