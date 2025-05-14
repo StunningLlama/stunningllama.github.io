@@ -3465,7 +3465,7 @@ class Electrodynamics {
                         this.Jy_p = this.validateArraySize(value);
                         break;
                     case 'materials':
-                        this.materials = this.create2DArray(this.nx, this.ny, Material, () => new Material());
+                        this.materials = this.create2DArray(this.nx, this.ny, Array, () => new Material());
                         for (let i = 0; i < Math.min(this.nx, data.materials.length); i++) {
                             for (let j = 0; j < Math.min(this.ny, data.materials[i].length); j++) {
                                 const savedMaterial = data.materials[i][j];

@@ -367,9 +367,10 @@
     <script src="electrodynamics-support.js"></script>
     <script src="electrodynamics.js"></script>
     <script>
+        var electrodynamics;
         var Module = {
             onRuntimeInitialized: () => {
-                const electrodynamics = new Electrodynamics();
+                electrodynamics = new Electrodynamics();
                 electrodynamics.run();
             }
         }
