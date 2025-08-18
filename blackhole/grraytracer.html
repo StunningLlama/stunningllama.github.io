@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive general relativity</title>
+    <link rel="stylesheet" href="style.css">
+    <head>
+  <style>
+    body {
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    .container {
+      font-family: Arial, sans-serif;
+      margin: 28px;
+    }
+
+    h1,
+    h2 {
+      color: #2c3e50;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, 300px);
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .card a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+
+            #video-container {
+            position: relative;
+            width: 40%;
+            margin: auto;
+            padding-bottom: 30%;
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #youtube-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+  </style>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="menu-bar">
+        <a href="../index.html">Home</a>
+    </div>
+
+  <div class="container">
+    <h1>Interactive general relativity</h1>
+
+    <p>Real time black hole simulation. Fly around and experience the effects of general relativity.</p>
+    <ul>
+      <li>Schwarzchild and kerr black holes, and wormholes</li>
+      <li>Spaceship mode</li>
+      <li>Customizable backgrounds</li>
+    </ul>
+
+    <p>
+    You can download the program <a id="download-program" class="download-button" href="https://www.dropbox.com/scl/fo/io35nmv5hvwpp81ok7jli/AEYotncdSj8tI-hm6vxnDfc?rlkey=psin7i16261i66y7k9gyztcfy&st=nb265272&dl=0" download>here</a>
+    or read the <a id="download-paper" class="download-button" href="./documents/RelRaytracing.pdf">report</a> containing some technical details.
+    </p>
+
+    <div id="video-container">
+        <iframe id="youtube-video" src="https://www.youtube.com/embed/rTZ9F5Skj1k" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <img src="images/schwarzchild.png" width=30% alt="Schwarzchild black hole">
+    <img src="images/kerr.png" width=30% alt="Kerr black hole">
+    <img src="images/wormhole.png" width=30% alt="Wormhole">
+</div>
+</body>
+</html>
